@@ -136,6 +136,16 @@ public final class AgoControlSiteFields {
                 true, true, true));
 
         AgoControlSiteFields.add(Element.class, new FieldDescriptor(
+                "elementId", "Element ID",
+                TextField.class, null,
+                100, null, String.class, null,
+                true, false, false));
+        AgoControlSiteFields.add(Element.class, new FieldDescriptor(
+                "parentId", "Parent ID",
+                TextField.class, null,
+                100, null, String.class, null,
+                true, false, false));
+        AgoControlSiteFields.add(Element.class, new FieldDescriptor(
                 "name", "Name",
                 TextField.class, null,
                 100, null, String.class, "",

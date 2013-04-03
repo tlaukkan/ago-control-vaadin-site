@@ -15,19 +15,24 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * The inventory element.
  */
 @Entity
-public final class Element implements Serializable {
+public final class Element implements Serializable, Comparable<Element> {
     /** Java serialization version UID. */
     private static final long serialVersionUID = 1L;
 
     /** Unique UUID of the entity. */
     @Id
-    @GeneratedValue(generator = "uuid")
     private String elementId;
+
+    /** Parent ID of the parent entity or own id if root. */
+    @Column(nullable = false)
+    private String parentId;
+
 
     /** Owning company. */
     @JoinColumn(nullable = false)
@@ -66,6 +71,66 @@ public final class Element implements Serializable {
     private Date modified;
 
     /**
+     * Default constructor.
+     */
+    public Element() {
+    }
+
+    /**
+     * Constructor for initializing element fields.
+     * @param owner the owning company
+     * @param type the type
+     * @param name the name
+     * @param category the category
+     */
+    public Element(final Company owner, final ElementType type, final String name, final String category) {
+        this.created = new Date();
+        this.elementId = UUID.randomUUID().toString().toUpperCase();
+        this.parentId = elementId;
+        this.owner = owner;
+        this.type = type;
+        this.name = name;
+        this.category = category;
+    }
+
+    /**
+     * @param elementId the elementId
+     * @param parentId the parentId
+     * @param owner the owner
+     * @param type the type
+     * @param name the name
+     * @param category the category
+     */
+    public Element(final String elementId, final String parentId, final Company owner, final ElementType type,
+                   final String name, final String category) {
+        this.created = new Date();
+        this.elementId = elementId;
+        this.parentId = parentId;
+        this.owner = owner;
+        this.type = type;
+        this.name = name;
+        this.category = category;
+    }
+
+    /**
+     * @param parentId the elementId
+     * @param owner the owner
+     * @param type the type
+     * @param name the name
+     * @param category the category
+     */
+    public Element(final String parentId, final Company owner, final ElementType type,
+                   final String name, final String category) {
+        this.created = new Date();
+        this.elementId = UUID.randomUUID().toString().toUpperCase();
+        this.parentId = parentId;
+        this.owner = owner;
+        this.type = type;
+        this.name = name;
+        this.category = category;
+    }
+
+    /**
      * @return the elementID
      */
     public String getElementId() {
@@ -77,6 +142,20 @@ public final class Element implements Serializable {
      */
     public void setElementId(final String elementId) {
         this.elementId = elementId;
+    }
+
+    /**
+     * @return the parentId
+     */
+    public String getParentId() {
+        return parentId;
+    }
+
+    /**
+     * @param parentId the parentId to set
+     */
+    public void setParentId(final String parentId) {
+        this.parentId = parentId;
     }
 
     /**
@@ -193,7 +272,7 @@ public final class Element implements Serializable {
 
     @Override
     public String toString() {
-        return treeIndex + " " + name;
+        return name;
     }
 
     @Override
@@ -206,4 +285,8 @@ public final class Element implements Serializable {
         return obj != null && obj instanceof Element && elementId.equals(((Element) obj).getElementId());
     }
 
+    @Override
+    public int compareTo(final Element o) {
+        return toString().compareTo(o.toString());
+    }
 }
