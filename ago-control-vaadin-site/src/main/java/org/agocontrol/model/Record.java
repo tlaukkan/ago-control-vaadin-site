@@ -86,13 +86,17 @@ public final class Record implements Serializable {
      * @param owner the owning company
      * @param element the source element
      * @param value the content
+     * @param unit
      * @param created the create time stamp
      */
-    public Record(final Company owner, final Element element, final BigDecimal value, final Date created) {
+    public Record(final Company owner, final Element element, final BigDecimal value, final String unit,
+                  final Date created) {
         this.owner = owner;
         this.element = element;
         this.value = value;
+        this.unit = unit;
         this.created = created;
+        this.modified = created;
     }
 
     /**

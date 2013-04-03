@@ -86,6 +86,8 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
     private static final String PROPERTIES_CATEGORY = "ago-control-vaadin-site";
     /** The persistence unit to be used. */
     public static final String PERSISTENCE_UNIT = "ago-control-vaadin-site";
+    /** The shutdown flag for signaling shutdown. */
+    private static boolean shutdownRequested = false;
 
     /**
      * Main method for running BareSiteUI.
@@ -93,6 +95,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
      * @throws Exception if exception occurs in jetty startup.
      */
     public static void main(final String[] args) throws Exception {
+        final Thread mainThread = Thread.currentThread();
         DOMConfigurator.configure("./log4j.xml");
 
         final Map properties = new HashMap();
@@ -123,10 +126,79 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
 
         server.setHandler(context);
         server.start();
+
+        final List<Thread> eventFetchThreads = new ArrayList<>();
         final EntityManager entityManager = entityManagerFactory.createEntityManager();
-        while (true) {
+        final List<Company> companies = CompanyDao.getCompanies(entityManager);
+        for (final Company company : companies) {
+
+            final List<Bus> buses = BusDao.getBuses(entityManager, company);
+            for (final Bus bus : buses) {
+
+
+                final Thread eventFetchThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        final EntityManager threadEntityManager = entityManagerFactory.createEntityManager();
+                        final Company threadCompany = threadEntityManager.getReference(Company.class,
+                                company.getCompanyId());
+
+                        final AgoControlBusClient client = new AgoControlBusClient(bus.getJsonRpcUrl());
+                        String subscriptionId = "";
+                        try {
+                            subscriptionId= client.subscribe();
+                        } catch (final Throwable t) {
+                            LOGGER.error("Error in in initial subscription to events..", t);
+                        }
+                        while (!shutdownRequested) {
+                            try {
+                                client.processEvents(threadEntityManager, threadCompany);
+
+                                final boolean subscriptionOk =
+                                    client.fetch(threadEntityManager, threadCompany, subscriptionId);
+
+                                if (!subscriptionOk) {
+                                    subscriptionId = client.subscribe();
+                                }
+
+                            } catch (final Throwable t) {
+                                LOGGER.error("Error in fetching events..", t);
+                                try {
+                                    Thread.sleep(10000);
+                                } catch (final InterruptedException e) {
+                                    break;
+                                }
+                            }
+                            try {
+                                Thread.sleep(200);
+                            } catch (final InterruptedException e) {
+                                LOGGER.debug("Event fetcher thread interrupted.", e);
+                                break;
+                            }
+                        }
+
+                        client.unsubscribe(subscriptionId);
+
+                    }
+                }, "Event fetcher: " + bus.getJsonRpcUrl());
+                eventFetchThread.start();
+                eventFetchThreads.add(eventFetchThread);
+            }
+        }
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                shutdownRequested = true;
+                mainThread.interrupt();
+                for (final Thread thread : eventFetchThreads) {
+                    thread.interrupt();
+                }
+            }
+        });
+
+        while (!shutdownRequested) {
             try {
-                final List<Company> companies = CompanyDao.getCompanies(entityManager);
                 for (final Company company : companies) {
 
                     final List<Bus> buses = BusDao.getBuses(entityManager, company);
@@ -163,10 +235,12 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
             try {
                 Thread.sleep(5 * 60000);
             } catch (final InterruptedException e) {
-                LOGGER.info("Interrupt in inventory synchronization loop.", e);
+                LOGGER.debug("Interrupt in inventory synchronization loop.", e);
                 break;
             }
         }
+
+        server.stop();
     }
 
     @Override

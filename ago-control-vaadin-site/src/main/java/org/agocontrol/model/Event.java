@@ -55,9 +55,13 @@ public final class Event implements Serializable {
     @Column(length = 1024, nullable = false)
     private String content;
 
+    /** True if processing error occurred. */
+    @Column(nullable = true)
+    private boolean processingError = false;
+
     /** Processed time of the event. */
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Date processed;
 
     /** Created time of the event. */
@@ -128,6 +132,20 @@ public final class Event implements Serializable {
      */
     public void setContent(final String content) {
         this.content = content;
+    }
+
+    /**
+     * @return true if error in processing occurred
+     */
+    public boolean isProcessingError() {
+        return processingError;
+    }
+
+    /**
+     * @param processingError the processingError to set
+     */
+    public void setProcessingError(final boolean processingError) {
+        this.processingError = processingError;
     }
 
     /**

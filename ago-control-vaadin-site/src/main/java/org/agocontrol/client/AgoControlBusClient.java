@@ -1,16 +1,22 @@
 package org.agocontrol.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.googlecode.jsonrpc4j.JsonRpcClientException;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import org.agocontrol.dao.ElementDao;
 import org.agocontrol.dao.EventDao;
+import org.agocontrol.dao.RecordDao;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.ElementType;
 import org.agocontrol.model.Event;
+import org.agocontrol.model.Record;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
 
 import javax.persistence.EntityManager;
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,6 +54,9 @@ public class AgoControlBusClient {
      * The RPC message ID counter.
      */
     private int messageIDCounter = 0;
+
+    /** JSON object mapper. */
+    private final ObjectMapper mapper = new ObjectMapper();
 
     /**
      * Constructor for setting the JSON RPC URL.
@@ -110,8 +119,9 @@ public class AgoControlBusClient {
      * @param entityManager the entityManager
      * @param owner the owning company
      * @param subscriptionId the subscription ID
+     * @return false if new subscription is required.
      */
-    public final synchronized void fetch(final EntityManager entityManager, final Company owner,
+    public final synchronized boolean fetch(final EntityManager entityManager, final Company owner,
                                          final String subscriptionId) {
         if (!ensureConnection()) {
             throw new RuntimeException("Failed to connect: " + jsonRpcUrl);
@@ -121,20 +131,72 @@ public class AgoControlBusClient {
         parameters.put("id", Integer.toString(++messageIDCounter));
         parameters.put("uuid", subscriptionId);
 
-        final String result;
+        final Map result;
         try {
-            result = client.invoke("getevent", parameters, String.class);
+            result = client.invoke("getevent", parameters, HashMap.class);
+            EventDao.saveEvents(entityManager, Collections.singletonList(
+                    new Event(owner, mapper.writeValueAsString(result), new Date())
+            ));
+        } catch (SocketTimeoutException e) {
+            LOGGER.debug("Socket timeout when fetching events (no events in read timeout time).");
+            return true;
+        } catch (JsonRpcClientException e) {
+            LOGGER.warn("JSON RPC exception: " + e);
+            return false;
         } catch (Throwable throwable) {
             LOGGER.error("Error getting event from bus " + jsonRpcUrl, throwable);
-            return;
+            return true;
         }
-
-        EventDao.saveEvents(entityManager, Collections.singletonList(
-                new Event(owner, result, new Date())
-        ));
+        return true;
     }
 
+    /**
+     * Process events.
+     * @param entityManager the entityManager
+     * @param owner the owning company
+     * @return number of events processed.
+     */
+    public final int processEvents(final EntityManager entityManager, final Company owner) {
+        final List<Event> events = EventDao.getUnprocessedEvents(entityManager, owner);
 
+        for (final Event event : events) {
+            try {
+                final Map<String, Object> eventMessage = mapper.readValue(event.getContent(), HashMap.class);
+
+                final String elementId = (String) eventMessage.get("uuid");
+                final String name = (String) eventMessage.get("event");
+                final String unit = (String) eventMessage.get("unit");
+                final String valueString = (String) eventMessage.get("level");
+
+
+                final Element element = ElementDao.getElement(entityManager, elementId);
+
+                if (element != null && element.getOwner().equals(owner) && valueString !=null &&
+                        valueString.length() != 0) {
+                    final BigDecimal value = new BigDecimal(valueString);
+
+                    RecordDao.saveRecords(entityManager, Collections.singletonList(new Record(
+                        owner,
+                        element,
+                        value,
+                        unit,
+                        event.getCreated()
+                    )));
+
+                    event.setProcessingError(false);
+                } else {
+                    event.setProcessingError(true);
+                }
+            } catch (Throwable t) {
+                LOGGER.warn("Error processing event: " + event.getEventId());
+                event.setProcessingError(true);
+            }
+            event.setProcessed(new Date());
+        }
+
+        EventDao.saveEvents(entityManager, events);
+        return events.size();
+    }
 
     /**
      * Synchronizes inventory.
@@ -307,6 +369,7 @@ public class AgoControlBusClient {
         try {
             client = new JsonRpcHttpClient(
                     new URL(jsonRpcUrl));
+            client.setReadTimeoutMillis(5 * 60 * 1000);
         } catch (MalformedURLException e) {
             LOGGER.error("Error connecting to: " + jsonRpcUrl, e);
         }

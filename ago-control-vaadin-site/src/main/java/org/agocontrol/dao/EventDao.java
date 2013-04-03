@@ -91,8 +91,9 @@ public final class EventDao {
      * @param owner the owning company
      * @return list of events.
      */
-    public static List<Event> getEvents(final EntityManager entityManager, final Company owner) {
-        final TypedQuery<Event> query = entityManager.createQuery("select e from Event as e where e.owner=:owner",
+    public static List<Event> getUnprocessedEvents(final EntityManager entityManager, final Company owner) {
+        final TypedQuery<Event> query = entityManager.createQuery("select e from Event as e where e.owner=:owner" +
+                " and e.processed is null order by e.created",
                 Event.class);
         query.setParameter("owner", owner);
         return query.getResultList();

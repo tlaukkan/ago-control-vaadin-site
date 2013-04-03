@@ -12,6 +12,8 @@
 
         <class>org.agocontrol.model.Bus</class>
         <class>org.agocontrol.model.Element</class>
+        <class>org.agocontrol.model.Event</class>
+        <class>org.agocontrol.model.Record</class>
 
 		<properties>
 			<property name="eclipselink.session.customizer" value="org.vaadin.addons.sitekit.model.UuidSequence"/>
