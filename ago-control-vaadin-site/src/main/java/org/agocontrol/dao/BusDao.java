@@ -21,21 +21,21 @@ public final class BusDao {
     private static final Logger LOG = Logger.getLogger(BusDao.class);
 
     /**
-     * Saves elements to database.
+     * Saves buses to database.
      * @param entityManager the entity manager
-     * @param elements the elements
+     * @param buss the buses
      */
-    public static final void saveBuses(final EntityManager entityManager, final List<Bus> elements) {
+    public static void saveBuses(final EntityManager entityManager, final List<Bus> buss) {
         final EntityTransaction transaction = entityManager.getTransaction();
         transaction.begin();
         try {
-            for (final Bus element : elements) {
-                element.setModified(new Date());
-                entityManager.persist(element);
+            for (final Bus bus : buss) {
+                bus.setModified(new Date());
+                entityManager.persist(bus);
             }
             transaction.commit();
         } catch (final Exception e) {
-            LOG.error("Error in add element.", e);
+            LOG.error("Error in add bus.", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -44,18 +44,18 @@ public final class BusDao {
     }
 
     /**
-     * Removes element from database.
+     * Removes bus from database.
      * @param entityManager the entity manager
-     * @param element the element
+     * @param bus the bus
      */
-    public static final void removeBus(final EntityManager entityManager, final Bus element) {
+    public static void removeBus(final EntityManager entityManager, final Bus bus) {
         final EntityTransaction transaction = entityManager.getTransaction();
         transaction.begin();
         try {
-            entityManager.remove(element);
+            entityManager.remove(bus);
             transaction.commit();
         } catch (final Exception e) {
-            LOG.error("Error in remove element.", e);
+            LOG.error("Error in remove bus.", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
@@ -64,34 +64,34 @@ public final class BusDao {
     }
 
     /**
-     * Gets given element.
+     * Gets given bus.
      * @param entityManager the entity manager.
      * @param owner the owning company
-     * @param name the name of the element
-     * @return the element
+     * @param name the name of the bus
+     * @return the bus
      */
-    public static final Bus getBus(final EntityManager entityManager, final Company owner, final String name) {
+    public static Bus getBus(final EntityManager entityManager, final Company owner, final String name) {
         final TypedQuery<Bus> query = entityManager.createQuery("select e from Bus as e where e.owner=:owner and e.name=:name",
                 Bus.class);
         query.setParameter("owner", owner);
         query.setParameter("name", name);
-        final List<Bus> elements = query.getResultList();
-        if (elements.size() == 1) {
-            return elements.get(0);
-        } else if (elements.size() == 0) {
+        final List<Bus> buss = query.getResultList();
+        if (buss.size() == 1) {
+            return buss.get(0);
+        } else if (buss.size() == 0) {
             return null;
         } else {
-            throw new RuntimeException("Multiple elements with same owner company and email address in database. Constraint is missing.");
+            throw new RuntimeException("Multiple buss with same owner company and email address in database. Constraint is missing.");
         }
     }
 
     /**
-     * Gets given element.
+     * Gets given buses.
      * @param entityManager the entity manager.
      * @param owner the owning company
-     * @return list of elements.
+     * @return list of buses.
      */
-    public static final List<Bus> getBuses(final EntityManager entityManager, final Company owner) {
+    public static List<Bus> getBuses(final EntityManager entityManager, final Company owner) {
         final TypedQuery<Bus> query = entityManager.createQuery("select e from Bus as e where e.owner=:owner",
                 Bus.class);
         query.setParameter("owner", owner);
@@ -99,12 +99,12 @@ public final class BusDao {
     }
 
     /**
-     * Gets given element.
+     * Gets given bus.
      * @param entityManager the entity manager.
-     * @param id the name of the element
-     * @return the element
+     * @param id the name of the bus
+     * @return the bus
      */
-    public static final Bus getBus(final EntityManager entityManager, final String id) {
+    public static Bus getBus(final EntityManager entityManager, final String id) {
         try {
             return entityManager.getReference(Bus.class, id);
         } catch (final EntityNotFoundException e) {

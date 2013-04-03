@@ -1,0 +1,116 @@
+package org.agocontrol.dao;
+
+import org.agocontrol.model.Record;
+import org.apache.log4j.Logger;
+import org.vaadin.addons.sitekit.model.Company;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.EntityTransaction;
+import javax.persistence.TypedQuery;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * @author Tommi S.E. Laukkanen
+ *
+ */
+public final class RecordDao {
+
+    /** The logger. */
+    private static final Logger LOG = Logger.getLogger(RecordDao.class);
+
+    /**
+     * Saves records to database.
+     * @param entityManager the entity manager
+     * @param records the records
+     */
+    public static void saveRecords(final EntityManager entityManager, final List<Record> records) {
+        final EntityTransaction transaction = entityManager.getTransaction();
+        transaction.begin();
+        try {
+            for (final Record record : records) {
+                record.setModified(new Date());
+                entityManager.persist(record);
+            }
+            transaction.commit();
+        } catch (final Exception e) {
+            LOG.error("Error in add record.", e);
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Removes record from database.
+     * @param entityManager the entity manager
+     * @param record the record
+     */
+    public static void removeRecord(final EntityManager entityManager, final Record record) {
+        final EntityTransaction transaction = entityManager.getTransaction();
+        transaction.begin();
+        try {
+            entityManager.remove(record);
+            transaction.commit();
+        } catch (final Exception e) {
+            LOG.error("Error in remove record.", e);
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Gets given record.
+     * @param entityManager the entity manager.
+     * @param owner the owning company
+     * @param name the name of the record
+     * @return the record
+     */
+    public static Record getRecord(final EntityManager entityManager, final Company owner, final String name) {
+        final TypedQuery<Record> query = entityManager.createQuery("select e from Record as e where e.owner=:owner and e.name=:name",
+                Record.class);
+        query.setParameter("owner", owner);
+        query.setParameter("name", name);
+        final List<Record> records = query.getResultList();
+        if (records.size() == 1) {
+            return records.get(0);
+        } else if (records.size() == 0) {
+            return null;
+        } else {
+            throw new RuntimeException("Multiple records with same owner company and email address in database. Constraint is missing.");
+        }
+    }
+
+    /**
+     * Gets given record.
+     * @param entityManager the entity manager.
+     * @param owner the owning company
+     * @return list of records.
+     */
+    public static List<Record> getRecords(final EntityManager entityManager, final Company owner) {
+        final TypedQuery<Record> query = entityManager.createQuery("select e from Record as e where e.owner=:owner",
+                Record.class);
+        query.setParameter("owner", owner);
+        return query.getResultList();
+    }
+
+    /**
+     * Gets given record.
+     * @param entityManager the entity manager.
+     * @param id the name of the record
+     * @return the record
+     */
+    public static Record getRecord(final EntityManager entityManager, final String id) {
+        try {
+            return entityManager.getReference(Record.class, id);
+        } catch (final EntityNotFoundException e) {
+            return null;
+        }
+    }
+
+
+}
