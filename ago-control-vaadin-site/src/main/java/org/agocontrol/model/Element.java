@@ -29,15 +29,19 @@ public final class Element implements Serializable {
     @GeneratedValue(generator = "uuid")
     private String elementId;
 
-    /** The bus. */
+    /** Owning company. */
     @JoinColumn(nullable = false)
     @ManyToOne(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH }, optional = false)
-    private Bus bus;
+    private Company owner;
 
     /** Type. */
     @Column(nullable = false)
     @Enumerated(EnumType.ORDINAL)
     private ElementType type;
+
+    /** Element name. */
+    @Column(nullable = false)
+    private String name;
 
     /** Category. */
     @Column(nullable = false)
@@ -50,10 +54,6 @@ public final class Element implements Serializable {
     /** Inventory tree depth. */
     @Column(nullable = false)
     private int treeDepth;
-
-    /** Element name. */
-    @Column(nullable = false)
-    private String name;
 
     /** Created time of the task. */
     @Temporal(TemporalType.TIMESTAMP)
@@ -80,17 +80,17 @@ public final class Element implements Serializable {
     }
 
     /**
-     * @return the Bus
+     * @return the owner
      */
-    public Bus getBus() {
-        return bus;
+    public Company getOwner() {
+        return owner;
     }
 
     /**
-     * @param bus the Bus
+     * @param owner the owner to set
      */
-    public void setBus(final Bus bus) {
-        this.bus = bus;
+    public void setOwner(final Company owner) {
+        this.owner = owner;
     }
 
     /**

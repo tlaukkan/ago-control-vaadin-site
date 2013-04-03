@@ -19,6 +19,8 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinServletRequest;
+import org.agocontrol.site.viewlet.bus.BusFlowViewlet;
+import org.agocontrol.site.viewlet.element.ElementFlowViewlet;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.eclipse.jetty.server.Server;
@@ -87,6 +89,22 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
     public static void main(final String[] args) throws Exception {
         DOMConfigurator.configure("./log4j.xml");
 
+        final Map properties = new HashMap();
+        properties.put(PersistenceUnitProperties.JDBC_DRIVER, PropertiesUtil.getProperty(
+                PROPERTIES_CATEGORY, PersistenceUnitProperties.JDBC_DRIVER));
+        properties.put(PersistenceUnitProperties.JDBC_URL, PropertiesUtil.getProperty(
+                PROPERTIES_CATEGORY, PersistenceUnitProperties.JDBC_URL));
+        properties.put(PersistenceUnitProperties.JDBC_USER, PropertiesUtil.getProperty(
+                PROPERTIES_CATEGORY, PersistenceUnitProperties.JDBC_USER));
+        properties.put(PersistenceUnitProperties.JDBC_PASSWORD, PropertiesUtil.getProperty(
+                PROPERTIES_CATEGORY, PersistenceUnitProperties.JDBC_PASSWORD));
+        properties.put(PersistenceUnitProperties.DDL_GENERATION, PropertiesUtil.getProperty(
+                PROPERTIES_CATEGORY, PersistenceUnitProperties.DDL_GENERATION));
+        entityManagerFactory = Persistence.createEntityManagerFactory(
+                PERSISTENCE_UNIT, properties);
+
+
+
         final String webappUrl = AgoControlSiteUI.class.getClassLoader().getResource("webapp/").toExternalForm();
 
         final Server server = new Server(8081);
@@ -109,7 +127,9 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         final LocalizationProvider localizationProvider =
                 new LocalizationProviderBundleImpl(new String[] {"bare-site-localization",
                         "ago-control-vaadin-site-localization"});
+
         BareSiteFields.initialize(localizationProvider, getLocale());
+        AgoControlSiteFields.initialize(localizationProvider, getLocale());
 
         final SiteContext siteContext = new SiteContext();
         final EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -144,6 +164,22 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
                 "This is default view.", FixedWidthView.class.getCanonicalName(), new String[]{},
                 Arrays.asList(new ViewletDescriptor[0])
         )));
+
+        viewDescriptors.add(new ViewDescriptor("buses", null, null, new ViewVersion(
+                0, "master", "Buses", "", "This is buses page.",
+                FixedWidthView.class.getCanonicalName(), new String[]{"administrator"},
+                Arrays.asList(new ViewletDescriptor(
+                        "content", "Buses Viewlet", "This is Buses viewlet.", null,
+                        BusFlowViewlet.class.getCanonicalName())
+                ))));
+
+        viewDescriptors.add(new ViewDescriptor("elements", null, null, new ViewVersion(
+                0, "master", "Elements", "", "This is elements page.",
+                FixedWidthView.class.getCanonicalName(), new String[]{"administrator"},
+                Arrays.asList(new ViewletDescriptor(
+                        "content", "Elements Viewlet", "This is Elements viewlet.", null,
+                         ElementFlowViewlet.class.getCanonicalName())
+                ))));
 
         viewDescriptors.add(new ViewDescriptor("users", null, null, new ViewVersion(
                 0, "master", "Users", "", "This is users page.",
@@ -192,7 +228,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
                 ))));
 
         final NavigationDescriptor navigationDescriptor = new NavigationDescriptor("navigation", null, null,
-                new NavigationVersion(0, "default", "default;customers;users;groups;companies;login", true));
+                new NavigationVersion(0, "default", "default;buses;elements;customers;users;groups;companies;login", true));
 
         return new SiteDescriptor("Test site.", "test site", "This is a test site.",
                 navigationDescriptor, viewDescriptors);
@@ -201,21 +237,5 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
 
     /** The entity manager factory for test. */
     private static EntityManagerFactory entityManagerFactory;
-    static {
-        //BasicConfigurator.configure();
-        @SuppressWarnings("rawtypes")
-        final Map properties = new HashMap();
-        properties.put(PersistenceUnitProperties.JDBC_DRIVER, PropertiesUtil.getProperty(
-                PROPERTIES_CATEGORY, PersistenceUnitProperties.JDBC_DRIVER));
-        properties.put(PersistenceUnitProperties.JDBC_URL, PropertiesUtil.getProperty(
-                PROPERTIES_CATEGORY, PersistenceUnitProperties.JDBC_URL));
-        properties.put(PersistenceUnitProperties.JDBC_USER, PropertiesUtil.getProperty(
-                PROPERTIES_CATEGORY, PersistenceUnitProperties.JDBC_USER));
-        properties.put(PersistenceUnitProperties.JDBC_PASSWORD, PropertiesUtil.getProperty(
-                PROPERTIES_CATEGORY, PersistenceUnitProperties.JDBC_PASSWORD));
-        properties.put(PersistenceUnitProperties.DDL_GENERATION, PropertiesUtil.getProperty(
-                PROPERTIES_CATEGORY, PersistenceUnitProperties.DDL_GENERATION));
-        entityManagerFactory = Persistence.createEntityManagerFactory(
-                PERSISTENCE_UNIT, properties);
-    }
+
 }

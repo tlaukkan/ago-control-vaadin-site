@@ -20,6 +20,8 @@ import org.vaadin.addons.sitekit.model.Company;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -58,6 +60,16 @@ public final class Bus implements Serializable {
     /** JSON RPC URL. */
     @Column(nullable = false)
     private String jsonRpcUrl;
+
+    /** Connection Status. */
+    @Column(nullable = false)
+    @Enumerated(EnumType.ORDINAL)
+    private BusConnectionStatus connectionStatus;
+
+    /** Inventory synchronized time of the task. */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = false)
+    private Date inventorySynchronized;
 
     /** Created time of the task. */
     @Temporal(TemporalType.TIMESTAMP)
@@ -146,6 +158,20 @@ public final class Bus implements Serializable {
     }
 
     /**
+     * @return the connectionStatus
+     */
+    public BusConnectionStatus getConnectionStatus() {
+        return connectionStatus;
+    }
+
+    /**
+     * @param connectionStatus the connectionStatus to set
+     */
+    public void setConnectionStatus(final BusConnectionStatus connectionStatus) {
+        this.connectionStatus = connectionStatus;
+    }
+
+    /**
      * @return the created
      */
     public Date getCreated() {
@@ -171,6 +197,20 @@ public final class Bus implements Serializable {
      */
     public void setModified(final Date modified) {
         this.modified = modified;
+    }
+
+    /**
+     * @return the inventorySynchronized
+     */
+    public Date getInventorySynchronized() {
+        return inventorySynchronized;
+    }
+
+    /**
+     * @param inventorySynchronized the inventorySynchronized to set
+     */
+    public void setInventorySynchronized(final Date inventorySynchronized) {
+        this.inventorySynchronized = inventorySynchronized;
     }
 
     @Override
