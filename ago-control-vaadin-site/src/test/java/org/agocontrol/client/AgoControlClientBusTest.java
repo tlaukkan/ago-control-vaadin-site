@@ -1,6 +1,7 @@
 package org.agocontrol.client;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
+import org.apache.log4j.BasicConfigurator;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -28,6 +29,7 @@ public class AgoControlClientBusTest {
     private static EntityManagerFactory entityManagerFactory;
 
     static {
+        BasicConfigurator.configure();
         @SuppressWarnings("rawtypes")
         final Map properties = new HashMap();
         properties.put(PersistenceUnitProperties.JDBC_DRIVER,
@@ -67,20 +69,18 @@ public class AgoControlClientBusTest {
     }
 
     @Test
-    public void testConnectivity() throws Exception, Throwable {
-
+    @Ignore
+    public void testInventorySynchronization() throws Exception, Throwable {
         final AgoControlBusClient client = new AgoControlBusClient("http://127.0.0.1:8008/jsonrpc");
         client.synchronizeInventory(entityManager, owner, 0);
-
-
-        /*final JsonRpcHttpClient client = new JsonRpcHttpClient(
-                new URL("http://127.0.0.1:8008/jsonrpc"));
-        final Map parameters = new HashMap();
-        final Map content = new HashMap();
-        content.put("command", "inventory");
-        content.put("id","2");
-        parameters.put("content", content);
-        final Object result = client.invoke("message", parameters, HashMap.class);
-        System.out.println(result.toString());*/
     }
+
+    @Test
+    public void testEventSubscribing() throws Exception, Throwable {
+        final AgoControlBusClient client = new AgoControlBusClient("http://127.0.0.1:8008/jsonrpc");
+        final String subscriptionId = client.subscribe();
+        client.fetch(entityManager, owner, subscriptionId);
+        client.unsubscribe(subscriptionId);
+    }
+
 }

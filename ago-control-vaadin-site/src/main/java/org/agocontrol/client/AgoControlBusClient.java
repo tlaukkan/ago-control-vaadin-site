@@ -2,8 +2,10 @@ package org.agocontrol.client;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import org.agocontrol.dao.ElementDao;
+import org.agocontrol.dao.EventDao;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.ElementType;
+import org.agocontrol.model.Event;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
 
@@ -11,6 +13,8 @@ import javax.persistence.EntityManager;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,6 +57,84 @@ public class AgoControlBusClient {
         this.jsonRpcUrl = jsonRpcUrl;
 
     }
+
+    /**
+     * Subscribe to events.
+     *
+     * @return subscription ID.
+     */
+    public final synchronized String subscribe() {
+        if (!ensureConnection()) {
+            throw new RuntimeException("Failed to connect: " + jsonRpcUrl);
+        }
+
+        final Map parameters = new HashMap();
+        parameters.put("id", Integer.toString(++messageIDCounter));
+
+        final String result;
+        try {
+            result = client.invoke("subscribe", parameters, String.class);
+        } catch (Throwable throwable) {
+            LOGGER.error("Error subscribing to bus: " + jsonRpcUrl, throwable);
+            throw new RuntimeException("Error subscribing to bus: " + jsonRpcUrl);
+        }
+
+        return result;
+    }
+
+    /**
+     * Ubsubscribe from events.
+     *
+     * @param subscriptionId the subscription ID
+     */
+    public final synchronized void unsubscribe(final String subscriptionId) {
+        if (!ensureConnection()) {
+            throw new RuntimeException("Failed to connect: " + jsonRpcUrl);
+        }
+
+        final Map parameters = new HashMap();
+        parameters.put("id", Integer.toString(++messageIDCounter));
+        parameters.put("uuid", subscriptionId);
+
+        try {
+            client.invoke("unsubscribe", parameters, Object.class);
+        } catch (Throwable throwable) {
+            LOGGER.error("Error unsubscribing from bus: " + jsonRpcUrl, throwable);
+            throw new RuntimeException("Error unsubscribing to bus: " + jsonRpcUrl);
+        }
+    }
+
+    /**
+     * Fetch events. If there is no events then this call will block.
+     *
+     * @param entityManager the entityManager
+     * @param owner the owning company
+     * @param subscriptionId the subscription ID
+     */
+    public final synchronized void fetch(final EntityManager entityManager, final Company owner,
+                                         final String subscriptionId) {
+        if (!ensureConnection()) {
+            throw new RuntimeException("Failed to connect: " + jsonRpcUrl);
+        }
+
+        final Map parameters = new HashMap();
+        parameters.put("id", Integer.toString(++messageIDCounter));
+        parameters.put("uuid", subscriptionId);
+
+        final String result;
+        try {
+            result = client.invoke("getevent", parameters, String.class);
+        } catch (Throwable throwable) {
+            LOGGER.error("Error getting event from bus " + jsonRpcUrl, throwable);
+            return;
+        }
+
+        EventDao.saveEvents(entityManager, Collections.singletonList(
+                new Event(owner, result, new Date())
+        ));
+    }
+
+
 
     /**
      * Synchronizes inventory.
