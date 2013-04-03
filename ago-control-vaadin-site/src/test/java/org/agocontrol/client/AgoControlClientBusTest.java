@@ -70,7 +70,7 @@ public class AgoControlClientBusTest {
     public void testConnectivity() throws Exception, Throwable {
 
         final AgoControlBusClient client = new AgoControlBusClient("http://127.0.0.1:8008/jsonrpc");
-        client.synchronizeInventory(entityManager, owner);
+        client.synchronizeInventory(entityManager, owner, 0);
 
 
         /*final JsonRpcHttpClient client = new JsonRpcHttpClient(

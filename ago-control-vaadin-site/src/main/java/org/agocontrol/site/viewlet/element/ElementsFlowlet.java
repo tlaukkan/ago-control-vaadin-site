@@ -75,7 +75,7 @@ public final class ElementsFlowlet extends AbstractFlowlet {
 
         final EntityManager entityManager = getSite().getSiteContext().getObject(EntityManager.class);
         container = new EntityContainer<Element>(entityManager, true, true, false, Element.class, 1000,
-                new String[] {"name"},
+                new String[] {"treeIndex"},
                 new boolean[] {true}, "elementId");
 
         ContainerUtil.addContainerProperties(container, fieldDescriptors);

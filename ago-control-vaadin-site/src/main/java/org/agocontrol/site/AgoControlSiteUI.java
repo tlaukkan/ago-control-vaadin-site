@@ -19,6 +19,10 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinServletRequest;
+import org.agocontrol.client.AgoControlBusClient;
+import org.agocontrol.dao.BusDao;
+import org.agocontrol.model.Bus;
+import org.agocontrol.model.BusConnectionStatus;
 import org.agocontrol.site.viewlet.bus.BusFlowViewlet;
 import org.agocontrol.site.viewlet.element.ElementFlowViewlet;
 import org.apache.log4j.Logger;
@@ -61,6 +65,8 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +81,7 @@ import java.util.Map;
 public final class AgoControlSiteUI extends AbstractSiteUI implements ContentProvider {
 
     /** The logger. */
-    private static final Logger LOG = Logger.getLogger(AgoControlSiteUI.class);
+    private static final Logger LOGGER = Logger.getLogger(AgoControlSiteUI.class);
     /** The properties category used in instantiating default services. */
     private static final String PROPERTIES_CATEGORY = "ago-control-vaadin-site";
     /** The persistence unit to be used. */
@@ -117,7 +123,50 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
 
         server.setHandler(context);
         server.start();
-        server.join();
+        final EntityManager entityManager = entityManagerFactory.createEntityManager();
+        while (true) {
+            try {
+                final List<Company> companies = CompanyDao.getCompanies(entityManager);
+                for (final Company company : companies) {
+
+                    final List<Bus> buses = BusDao.getBuses(entityManager, company);
+                    int treeIndex = 0;
+                    for (final Bus bus : buses) {
+
+                        bus.setConnectionStatus(BusConnectionStatus.Synchronizing);
+                        BusDao.saveBuses(entityManager, Collections.singletonList(bus));
+
+                        final AgoControlBusClient client = new AgoControlBusClient(bus.getJsonRpcUrl());
+
+                        boolean success;
+                        try {
+                            treeIndex = client.synchronizeInventory(entityManager, company, treeIndex);
+                            success = true;
+                        } catch (final Throwable t) {
+                            success = false;
+                            LOGGER.error("Failed to synchronize inventory to: " + bus.getJsonRpcUrl(), t);
+                        }
+
+                        entityManager.refresh(bus);
+                        if (success) {
+                            bus.setConnectionStatus(BusConnectionStatus.Connected);
+                            bus.setInventorySynchronized(new Date());
+                        } else {
+                            bus.setConnectionStatus(BusConnectionStatus.Error);
+                        }
+                        BusDao.saveBuses(entityManager, Collections.singletonList(bus));
+                    }
+                }
+            } catch (final Throwable t) {
+                LOGGER.error("Error in inventory synchronization.", t);
+            }
+            try {
+                Thread.sleep(5 * 60000);
+            } catch (final InterruptedException e) {
+                LOGGER.info("Interrupt in inventory synchronization loop.", e);
+                break;
+            }
+        }
     }
 
     @Override
@@ -228,7 +277,8 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
                 ))));
 
         final NavigationDescriptor navigationDescriptor = new NavigationDescriptor("navigation", null, null,
-                new NavigationVersion(0, "default", "default;buses;elements;customers;users;groups;companies;login", true));
+                new NavigationVersion(0, "default",
+                        "default;buses;elements;customers;users;groups;companies;login", true));
 
         return new SiteDescriptor("Test site.", "test site", "This is a test site.",
                 navigationDescriptor, viewDescriptors);

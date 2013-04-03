@@ -12,7 +12,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +28,7 @@ import java.util.TreeSet;
 public class AgoControlBusClient {
     /** The logger. */
     private static final Logger LOGGER = Logger.getLogger(AgoControlBusClient.class);
-    /** Default element name. */
+    /** Default bus name. */
     private static final String DEFAULT = "";
     /**
      * The JSON RPC URL.
@@ -48,7 +47,7 @@ public class AgoControlBusClient {
 
     /**
      * Constructor for setting the JSON RPC URL.
-     * @param jsonRpcUrl
+     * @param jsonRpcUrl the JSON RPC URL
      */
     public AgoControlBusClient(final String jsonRpcUrl) {
         this.jsonRpcUrl = jsonRpcUrl;
@@ -58,12 +57,14 @@ public class AgoControlBusClient {
     /**
      * Synchronizes inventory.
      * @param entityManager for database synchronization
-     * @param company company under which the inventory is synchronized.
-     * @return true if synchronization succeeded.
+     * @param owner company under which the inventory is synchronized.
+     * @param startTreeIndex the starting tree index
+     * @return new tree index.
      */
-    public final synchronized boolean synchronizeInventory(final EntityManager entityManager, final Company owner) {
+    public final synchronized int synchronizeInventory(final EntityManager entityManager, final Company owner,
+                                                           final int startTreeIndex) {
         if (!ensureConnection()) {
-            return false;
+            throw new RuntimeException("Failed to connect: " + jsonRpcUrl);
         }
 
         final Map parameters = new HashMap();
@@ -77,7 +78,7 @@ public class AgoControlBusClient {
             result = client.invoke("message", parameters, HashMap.class);
         } catch (Throwable throwable) {
             LOGGER.error("Error getting inventory from bus: " + jsonRpcUrl, throwable);
-            return false;
+            throw new RuntimeException("Error getting inventory from: " + jsonRpcUrl);
         }
 
         final List<Element> elements = new ArrayList<>(ElementDao.getElements(entityManager, owner));
@@ -92,7 +93,10 @@ public class AgoControlBusClient {
         }
 
         if (!nameBuildingMap.containsKey(DEFAULT)) {
-            nameBuildingMap.put(DEFAULT, new Element(owner, ElementType.Building, DEFAULT, ""));
+            final Element building = new Element(owner, ElementType.Building, DEFAULT, "");
+            nameBuildingMap.put(building.getName(), building);
+            idElementMap.put(building.getElementId(), building);
+            elements.add(building);
         }
 
         if (result.containsKey("rooms")) {
@@ -174,8 +178,9 @@ public class AgoControlBusClient {
         }
 
         final LinkedList<Element> elementsToIterate = new LinkedList<Element>();
+        elementsToIterate.addAll(roots);
 
-        int treeIndex = 0;
+        int treeIndex = startTreeIndex;
         while (elementsToIterate.size() > 0) {
             final Element element = elementsToIterate.removeFirst();
             element.setTreeIndex(++treeIndex);
@@ -184,12 +189,13 @@ public class AgoControlBusClient {
                 for (final Element child : children) {
                     child.setTreeDepth(element.getTreeDepth() + 1);
                 }
+                elementsToIterate.addAll(children);
             }
         }
 
         ElementDao.saveElements(entityManager, elements);
 
-        return true;
+        return treeIndex;
     }
 
     /**
