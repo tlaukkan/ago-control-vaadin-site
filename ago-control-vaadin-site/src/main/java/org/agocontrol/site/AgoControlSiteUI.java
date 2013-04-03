@@ -25,6 +25,8 @@ import org.agocontrol.model.Bus;
 import org.agocontrol.model.BusConnectionStatus;
 import org.agocontrol.site.viewlet.bus.BusFlowViewlet;
 import org.agocontrol.site.viewlet.element.ElementFlowViewlet;
+import org.agocontrol.site.viewlet.record.RecordFlowViewlet;
+import org.agocontrol.site.viewlet.recordset.RecordSetFlowViewlet;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.eclipse.jetty.server.Server;
@@ -304,6 +306,22 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
                          ElementFlowViewlet.class.getCanonicalName())
                 ))));
 
+        viewDescriptors.add(new ViewDescriptor("records", null, null, new ViewVersion(
+                0, "master", "Records", "", "This is records page.",
+                FixedWidthView.class.getCanonicalName(), new String[]{"administrator"},
+                Arrays.asList(new ViewletDescriptor(
+                        "content", "Records Viewlet", "This is Records viewlet.", null,
+                        RecordFlowViewlet.class.getCanonicalName())
+                ))));
+
+        viewDescriptors.add(new ViewDescriptor("record-sets", null, null, new ViewVersion(
+                0, "master", "Record Sets", "", "This is record sets page.",
+                FixedWidthView.class.getCanonicalName(), new String[]{"administrator"},
+                Arrays.asList(new ViewletDescriptor(
+                        "content", "Record Sets Viewlet", "This is Record Sets viewlet.", null,
+                        RecordSetFlowViewlet.class.getCanonicalName())
+                ))));
+
         viewDescriptors.add(new ViewDescriptor("users", null, null, new ViewVersion(
                 0, "master", "Users", "", "This is users page.",
                 FixedWidthView.class.getCanonicalName(), new String[]{"administrator"},
@@ -352,7 +370,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
 
         final NavigationDescriptor navigationDescriptor = new NavigationDescriptor("navigation", null, null,
                 new NavigationVersion(0, "default",
-                        "default;buses;elements;customers;users;groups;companies;login", true));
+                        "default;buses;elements;records;record-sets;customers;users;groups;companies;login", true));
 
         return new SiteDescriptor("Test site.", "test site", "This is a test site.",
                 navigationDescriptor, viewDescriptors);

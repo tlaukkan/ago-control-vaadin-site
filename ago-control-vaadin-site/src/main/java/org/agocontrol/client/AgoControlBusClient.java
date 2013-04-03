@@ -6,10 +6,13 @@ import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import org.agocontrol.dao.ElementDao;
 import org.agocontrol.dao.EventDao;
 import org.agocontrol.dao.RecordDao;
+import org.agocontrol.dao.RecordSetDao;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.ElementType;
 import org.agocontrol.model.Event;
 import org.agocontrol.model.Record;
+import org.agocontrol.model.RecordSet;
+import org.agocontrol.model.RecordType;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
 
@@ -171,15 +174,37 @@ public class AgoControlBusClient {
 
                 final Element element = ElementDao.getElement(entityManager, elementId);
 
-                if (element != null && element.getOwner().equals(owner) && valueString !=null &&
+                if (element != null && element.getOwner().equals(owner) && valueString != null &&
                         valueString.length() != 0) {
+
+                    RecordSet recordSet = RecordSetDao.getRecordSet(entityManager, element, name);
+
+                    if (recordSet == null) {
+                        RecordType recordType = RecordType.Other;
+                        if (name.toLowerCase().contains("humidity")) {
+                            recordType = RecordType.Humidity;
+                        } else if (name.toLowerCase().contains("brightness")) {
+                            recordType = RecordType.Brightness;
+                        } else if (name.toLowerCase().contains("temperature")) {
+                            recordType = RecordType.Temperature;
+                        }
+                        recordSet = new RecordSet(
+                                owner,
+                                element,
+                                name,
+                                recordType,
+                                unit,
+                                event.getCreated()
+                        );
+                        RecordSetDao.saveRecordSets(entityManager, Collections.singletonList(recordSet));
+                    }
+
                     final BigDecimal value = new BigDecimal(valueString);
 
                     RecordDao.saveRecords(entityManager, Collections.singletonList(new Record(
                         owner,
-                        element,
+                        recordSet,
                         value,
-                        unit,
                         event.getCreated()
                     )));
 

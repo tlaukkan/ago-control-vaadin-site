@@ -33,7 +33,6 @@ public final class Element implements Serializable, Comparable<Element> {
     @Column(nullable = false)
     private String parentId;
 
-
     /** Owning company. */
     @JoinColumn(nullable = false)
     @ManyToOne(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH }, optional = false)

@@ -22,10 +22,17 @@ import org.agocontrol.model.Bus;
 import org.agocontrol.model.BusConnectionStatus;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.ElementType;
+import org.agocontrol.model.Record;
+import org.agocontrol.model.RecordSet;
+import org.agocontrol.model.RecordType;
 import org.agocontrol.site.viewlet.bus.BusConnectionStatusField;
 import org.agocontrol.site.viewlet.element.ElementTypeField;
+import org.agocontrol.site.viewlet.record.RecordSetField;
+import org.agocontrol.site.viewlet.recordset.ElementField;
+import org.agocontrol.site.viewlet.recordset.RecordTypeField;
 import org.vaadin.addons.sitekit.grid.FieldDescriptor;
 import org.vaadin.addons.sitekit.grid.field.TimestampField;
+import org.vaadin.addons.sitekit.grid.formatter.BigDecimalFormatter;
 import org.vaadin.addons.sitekit.grid.formatter.TimestampFormatter;
 import org.vaadin.addons.sitekit.site.LocalizationProvider;
 
@@ -180,6 +187,56 @@ public final class AgoControlSiteFields {
                 TimestampField.class, TimestampFormatter.class,
                 150, null, Date.class, null,
                 true, true, true));
+
+        AgoControlSiteFields.add(Record.class, new FieldDescriptor(
+                "created", "Created",
+                TimestampField.class, TimestampFormatter.class,
+                100, null, Date.class, null, true,
+                true, true));
+        AgoControlSiteFields.add(Record.class, new FieldDescriptor(
+                "modified", "Modified",
+                TimestampField.class, TimestampFormatter.class,
+                100, null, Date.class, null,
+                true, true, true));
+        AgoControlSiteFields.add(Record.class, new FieldDescriptor(
+                "recordSet", "Record Set", RecordSetField.class, null,
+                300, null, Element.class,
+                null, false, true, true));
+        AgoControlSiteFields.add(Record.class, new FieldDescriptor(
+                "value", "Value",
+                TextField.class, BigDecimalFormatter.class,
+                100, null, BigDecimalFormatter.class, "",
+                false, true, true));
+
+        AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(
+                "created", "Created",
+                TimestampField.class, TimestampFormatter.class,
+                150, null, Date.class, null, true,
+                true, true));
+        AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(
+                "modified", "Modified",
+                TimestampField.class, TimestampFormatter.class,
+                150, null, Date.class, null,
+                true, true, true));
+        AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(
+                "element", "Element", ElementField.class, null,
+                100, null, Element.class,
+                null, false, true, true));
+        AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(
+                "name", "Name",
+                TextField.class, null,
+                200, null, String.class, "",
+                false, true, true));
+        AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(
+                "type", "Type",
+                RecordTypeField.class, null,
+                100, null, RecordType.class, "",
+                false, true, true));
+        AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(
+                "unit", "Unit",
+                TextField.class, null,
+                20, null, String.class, "",
+                false, false, true));
 
 
     }

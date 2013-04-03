@@ -20,6 +20,8 @@ import org.vaadin.addons.sitekit.model.Company;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -28,45 +30,53 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * Record.
+ * RecordSet.
  *
  * @author Tommi S.E. Laukkanen
  */
 @Entity
-@Table(name = "record")
-public final class Record implements Serializable {
+@Table(name = "recordset")
+public final class RecordSet implements Serializable {
     /** Java serialization version UID. */
     private static final long serialVersionUID = 1L;
 
     /** Unique UUID of the entity. */
     @Id
     @GeneratedValue(generator = "uuid")
-    private String recordId;
+    private String recordSetId;
 
     /** Owning company. */
     @JoinColumn(nullable = false)
     @ManyToOne(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH }, optional = false)
     private Company owner;
 
-    /** Value. */
-    @Column(nullable = false)
-    private BigDecimal value;
-
-    /** The record set. */
+    /** Element. */
     @JoinColumn(nullable = false)
     @ManyToOne(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH }, optional = false)
-    private RecordSet recordSet;
+    private Element element;
 
-    /** Created time of the record. */
+    /** Type. */
+    @Column(nullable = false)
+    @Enumerated(EnumType.ORDINAL)
+    private RecordType type;
+
+    /** Content. */
+    @Column(nullable = false)
+    private String name;
+
+    /** Unit. */
+    @Column(nullable = false)
+    private String unit;
+
+    /** Created time of the recordSet. */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date created;
 
-    /** Created time of the record. */
+    /** Created time of the recordSet. */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date modified;
@@ -74,21 +84,26 @@ public final class Record implements Serializable {
     /**
      * The default constructor for JPA.
      */
-    public Record() {
+    public RecordSet() {
         super();
     }
 
     /**
      * @param owner the owning company
-     * @param recordSet the recordSet
-     * @param value the content
+     * @param element the source element
+     * @param name the name
+     * @param type the content
+     * @param unit unit
      * @param created the create time stamp
      */
-    public Record(final Company owner, final RecordSet recordSet,
-                  final BigDecimal value, final Date created) {
+    public RecordSet(final Company owner, final Element element, final String name,
+                     final RecordType type, final String unit,
+                     final Date created) {
         this.owner = owner;
-        this.recordSet = recordSet;
-        this.value = value;
+        this.element = element;
+        this.name = name;
+        this.type = type;
+        this.unit = unit;
         this.created = created;
         this.modified = created;
     }
@@ -108,45 +123,73 @@ public final class Record implements Serializable {
     }
 
     /**
-     * @return the recordId
+     * @return the recordSetId
      */
-    public String getRecordId() {
-        return recordId;
+    public String getRecordSetId() {
+        return recordSetId;
     }
 
     /**
-     * @param recordId the recordId to set
+     * @param recordSetId the recordSetId to set
      */
-    public void setRecordId(final String recordId) {
-        this.recordId = recordId;
+    public void setRecordSetId(final String recordSetId) {
+        this.recordSetId = recordSetId;
     }
 
     /**
-     * @return the recordSet
+     * @return name
      */
-    public RecordSet getRecordSet() {
-        return recordSet;
+    public String getName() {
+        return name;
     }
 
     /**
-     * @param recordSet the recordSet to set
+     * @param name the recordSet name
      */
-    public void setRecordSet(final RecordSet recordSet) {
-        this.recordSet = recordSet;
+    public void setName(final String name) {
+        this.name = name;
     }
 
     /**
-     * @return the value
+     * @return the element
      */
-    public BigDecimal getValue() {
-        return value;
+    public Element getElement() {
+        return element;
     }
 
     /**
-     * @param value the value to set
+     * @param element the element to set
      */
-    public void setValue(final BigDecimal value) {
-        this.value = value;
+    public void setElement(final Element element) {
+        this.element = element;
+    }
+
+    /**
+     * @return the type
+     */
+    public RecordType getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(final RecordType type) {
+        this.type = type;
+    }
+
+    /**
+     * @return the unit
+     */
+    public String getUnit() {
+        return unit;
+    }
+
+    /**
+     * @param unit the unit to set
+     */
+    public void setUnit(final String unit) {
+        this.unit = unit;
     }
 
     /**
@@ -179,17 +222,18 @@ public final class Record implements Serializable {
 
     @Override
     public String toString() {
-        return created.toString() + ":" + value;
+        return element.toString() + " > " + type + (unit.length() > 0 ?  " [" + unit + "]" : "")+
+                (type == RecordType.Other ? " (" + name + ")" : "");
     }
 
     @Override
     public int hashCode() {
-        return recordId.hashCode();
+        return recordSetId.hashCode();
     }
 
     @Override
     public boolean equals(final Object obj) {
-        return obj != null && obj instanceof Record && recordId.equals(((Record) obj).getRecordId());
+        return obj != null && obj instanceof RecordSet && recordSetId.equals(((RecordSet) obj).getRecordSetId());
     }
 
 }
