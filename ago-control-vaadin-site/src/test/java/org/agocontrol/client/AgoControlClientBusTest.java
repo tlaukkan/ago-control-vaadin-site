@@ -76,6 +76,7 @@ public class AgoControlClientBusTest {
     }
 
     @Test
+    @Ignore
     public void testEventSubscribing() throws Exception, Throwable {
         final AgoControlBusClient client = new AgoControlBusClient("http://127.0.0.1:8008/jsonrpc");
         final String subscriptionId = client.subscribe();

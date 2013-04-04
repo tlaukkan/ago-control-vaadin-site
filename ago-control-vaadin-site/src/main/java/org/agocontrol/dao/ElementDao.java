@@ -93,7 +93,8 @@ public final class ElementDao {
      * @return list of elements.
      */
     public static final List<Element> getElements(final EntityManager entityManager, final Company owner) {
-        final TypedQuery<Element> query = entityManager.createQuery("select e from Element as e where e.owner=:owner",
+        final TypedQuery<Element> query = entityManager.createQuery("select e from Element as e where e.owner=:owner " +
+                "order by e.treeIndex",
                 Element.class);
         query.setParameter("owner", owner);
         return query.getResultList();
@@ -109,7 +110,7 @@ public final class ElementDao {
     public static final List<Element> getElements(final EntityManager entityManager, final Company owner, final
     ElementType type) {
         final TypedQuery<Element> query = entityManager.createQuery("select e from Element as e where e.owner=:owner" +
-                " e.type=:type",
+                " and e.type=:type order by e.name",
                 Element.class);
         query.setParameter("owner", owner);
         query.setParameter("type", type);

@@ -27,6 +27,8 @@ import org.agocontrol.model.BusConnectionStatus;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.ElementType;
 import org.agocontrol.site.viewlet.bus.BusFlowViewlet;
+import org.agocontrol.site.viewlet.dashboard.BuildingControlPanel;
+import org.agocontrol.site.viewlet.dashboard.DashboardViewlet;
 import org.agocontrol.site.viewlet.element.ElementFlowViewlet;
 import org.agocontrol.site.viewlet.record.RecordFlowViewlet;
 import org.agocontrol.site.viewlet.recordset.RecordSetFlowViewlet;
@@ -291,7 +293,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         /*final EntityManager entityManager = getSite().getSiteContext().getObject(EntityManager.class);
         final Company company = getSite().getSiteContext().getObject(Company.class);
         if (company != null) {
-            final List<Element> buildings = ElementDao.getElements(entityManager, company, ElementType.Building);
+            final List<Element> buildings = ElementDao.getElements(entityManager, company, ElementType.BUILDING);
             for (final Element building : buildings) {
                 viewDescriptors.add(new ViewDescriptor(building.getName(), null, null,
                         new ViewVersion(0, "master", building.getName(), "",
@@ -303,7 +305,10 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
 
         viewDescriptors.add(new ViewDescriptor("default", null, null, new ViewVersion(0, "master", "Default", "",
                 "This is default view.", FixedWidthView.class.getCanonicalName(), new String[]{},
-                Arrays.asList(new ViewletDescriptor[0])
+                Arrays.asList(new ViewletDescriptor(
+                        "content", "Dashboard Viewlet", "This is Dashboard viewlet.", null,
+                        DashboardViewlet.class.getCanonicalName())
+                )
         )));
 
         viewDescriptors.add(new ViewDescriptor("buses", null, null, new ViewVersion(

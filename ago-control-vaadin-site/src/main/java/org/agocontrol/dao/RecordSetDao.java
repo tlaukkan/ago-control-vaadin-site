@@ -2,6 +2,7 @@ package org.agocontrol.dao;
 
 import org.agocontrol.model.Element;
 import org.agocontrol.model.RecordSet;
+import org.agocontrol.model.RecordType;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
 
@@ -90,14 +91,38 @@ public final class RecordSetDao {
     /**
      * Gets given recordSet.
      * @param entityManager the entity manager.
-     * @param owner the owning company
-     * @return list of recordSets.
+     * @param element the element
+     * @param type the type of the record
+     * @return the recordSet
      */
-    public static List<RecordSet> getUnprocessedRecordSets(final EntityManager entityManager, final Company owner) {
-        final TypedQuery<RecordSet> query = entityManager.createQuery("select e from RecordSet as e where e.owner=:owner" +
-                " and e.processed is null order by e.created",
+    public static RecordSet getRecordSet(final EntityManager entityManager, final Element element, final RecordType type) {
+        final TypedQuery<RecordSet> query = entityManager.createQuery(
+                "select e from RecordSet as e where e.element=:element and e.type=:type",
                 RecordSet.class);
-        query.setParameter("owner", owner);
+        query.setParameter("element", element);
+        query.setParameter("type", type);
+        final List<RecordSet> recordSets = query.getResultList();
+        if (recordSets.size() == 1) {
+            return recordSets.get(0);
+        } else if (recordSets.size() == 0) {
+            return null;
+        } else {
+            throw new RuntimeException("Multiple recordSets with same element and name in database. Constraint is missing.");
+        }
+    }
+
+
+    /**
+     * Gets given recordSets.
+     * @param entityManager the entity manager.
+     * @param element the element
+     * @return the recordSet
+     */
+    public static List<RecordSet> getRecordSets(final EntityManager entityManager, final Element element) {
+        final TypedQuery<RecordSet> query = entityManager.createQuery(
+                "select e from RecordSet as e where e.element=:element",
+                RecordSet.class);
+        query.setParameter("element", element);
         return query.getResultList();
     }
 

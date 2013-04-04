@@ -223,7 +223,7 @@ public final class RecordSet implements Serializable {
     @Override
     public String toString() {
         return element.toString() + " > " + type + (unit.length() > 0 ?  " [" + unit + "]" : "")+
-                (type == RecordType.Other ? " (" + name + ")" : "");
+                (type == RecordType.OTHER ? " (" + name + ")" : "");
     }
 
     @Override

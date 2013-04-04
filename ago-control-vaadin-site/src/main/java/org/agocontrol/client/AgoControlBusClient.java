@@ -180,13 +180,13 @@ public class AgoControlBusClient {
                     RecordSet recordSet = RecordSetDao.getRecordSet(entityManager, element, name);
 
                     if (recordSet == null) {
-                        RecordType recordType = RecordType.Other;
+                        RecordType recordType = RecordType.OTHER;
                         if (name.toLowerCase().contains("humidity")) {
-                            recordType = RecordType.Humidity;
+                            recordType = RecordType.HUMIDITY;
                         } else if (name.toLowerCase().contains("brightness")) {
-                            recordType = RecordType.Brightness;
+                            recordType = RecordType.BRIGHTNESS;
                         } else if (name.toLowerCase().contains("temperature")) {
-                            recordType = RecordType.Temperature;
+                            recordType = RecordType.TEMPERATURE;
                         }
                         recordSet = new RecordSet(
                                 owner,
@@ -255,14 +255,14 @@ public class AgoControlBusClient {
         final Map<String, Element> nameBuildingMap = new HashMap<>();
 
         for (final Element element : elements) {
-            if (element.getType() == ElementType.Building) {
+            if (element.getType() == ElementType.BUILDING) {
                 nameBuildingMap.put(element.getName(), element);
             }
             idElementMap.put(element.getElementId(), element);
         }
 
         if (!nameBuildingMap.containsKey(DEFAULT)) {
-            final Element building = new Element(owner, ElementType.Building, DEFAULT, "");
+            final Element building = new Element(owner, ElementType.BUILDING, DEFAULT, "");
             nameBuildingMap.put(building.getName(), building);
             idElementMap.put(building.getElementId(), building);
             elements.add(building);
@@ -279,7 +279,7 @@ public class AgoControlBusClient {
                 if (nameBuildingMap.containsKey(roomLocation)) {
                     building = nameBuildingMap.get(roomLocation);
                 } else {
-                    building = new Element(owner, ElementType.Building, DEFAULT, "");
+                    building = new Element(owner, ElementType.BUILDING, DEFAULT, "");
                     nameBuildingMap.put(DEFAULT, building);
                     elements.add(building);
                     idElementMap.put(building.getElementId(), building);
@@ -291,7 +291,7 @@ public class AgoControlBusClient {
                     room.setParentId(building.getElementId());
                     room.setName(roomName);
                 } else {
-                    room = new Element(roomId, building.getElementId(), owner, ElementType.Room, roomName, "");
+                    room = new Element(roomId, building.getElementId(), owner, ElementType.ROOM, roomName, "");
                     elements.add(room);
                     idElementMap.put(room.getElementId(), room);
                 }
@@ -319,9 +319,9 @@ public class AgoControlBusClient {
                     element.setParentId(parent.getElementId());
                     element.setName(name);
                     element.setCategory(category);
-                    element.setType(ElementType.Device);
+                    element.setType(ElementType.DEVICE);
                 } else {
-                    element = new Element(elementId, parent.getElementId(), owner, ElementType.Device, name, category);
+                    element = new Element(elementId, parent.getElementId(), owner, ElementType.DEVICE, name, category);
                     elements.add(element);
                     idElementMap.put(element.getElementId(), element);
                 }

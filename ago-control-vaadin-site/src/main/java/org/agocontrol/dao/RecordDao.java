@@ -1,6 +1,7 @@
 package org.agocontrol.dao;
 
 import org.agocontrol.model.Record;
+import org.agocontrol.model.RecordSet;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
 
@@ -86,17 +87,32 @@ public final class RecordDao {
     }
 
     /**
-     * Gets given record.
+     * Gets given records.
      * @param entityManager the entity manager.
      * @param owner the owning company
      * @return list of records.
      */
     public static List<Record> getRecords(final EntityManager entityManager, final Company owner) {
-        final TypedQuery<Record> query = entityManager.createQuery("select e from Record as e where e.owner=:owner",
+        final TypedQuery<Record> query = entityManager.createQuery("select e from Record as e where e.owner=:owner order by e.created",
                 Record.class);
         query.setParameter("owner", owner);
         return query.getResultList();
     }
+
+    /**
+     * Gets given records.
+     * @param entityManager the entity manager.
+     * @param recordSet the record set
+     * @return list of records.
+     */
+    public static List<Record> getRecords(final EntityManager entityManager, final RecordSet recordSet) {
+        final TypedQuery<Record> query = entityManager.createQuery(
+                "select e from Record as e where e.recordSet=:recordSet order by e.created",
+                Record.class);
+        query.setParameter("recordSet", recordSet);
+        return query.getResultList();
+    }
+
 
     /**
      * Gets given record.

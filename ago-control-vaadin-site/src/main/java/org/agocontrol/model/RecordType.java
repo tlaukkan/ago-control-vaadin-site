@@ -8,12 +8,12 @@ package org.agocontrol.model;
  * @author Tommi S.E. Laukkanen
  */
 public enum RecordType {
-    /** Other. */
-    Other,
-    /** Brightness. */
-    Brightness,
-    /** Humidity. */
-    Humidity,
-    /** Temperature. */
-    Temperature
+    /** OTHER. */
+    OTHER,
+    /** BRIGHTNESS. */
+    BRIGHTNESS,
+    /** HUMIDITY. */
+    HUMIDITY,
+    /** TEMPERATURE. */
+    TEMPERATURE
 }

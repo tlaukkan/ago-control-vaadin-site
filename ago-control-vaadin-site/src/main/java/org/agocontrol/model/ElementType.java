@@ -8,12 +8,12 @@ package org.agocontrol.model;
  * @author Tommi S.E. Laukkanen
  */
 public enum ElementType {
-    /** Other. */
-    Other,
-    /** Building. */
-    Building,
+    /** OTHER. */
+    OTHER,
+    /** BUILDING. */
+    BUILDING,
     /** Income account type. */
-    Room,
+    ROOM,
     /** Expenses account type. */
-    Device
+    DEVICE
 }
