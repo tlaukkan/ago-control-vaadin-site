@@ -73,6 +73,10 @@ public final class Element implements Serializable, Comparable<Element> {
      * Default constructor.
      */
     public Element() {
+        this.elementId = UUID.randomUUID().toString().toUpperCase();
+        this.parentId = elementId;
+        this.created = new Date();
+        this.modified = this.created;
     }
 
     /**

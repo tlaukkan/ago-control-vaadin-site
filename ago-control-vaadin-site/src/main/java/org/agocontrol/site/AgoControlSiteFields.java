@@ -225,7 +225,7 @@ public final class AgoControlSiteFields {
         AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(
                 "name", "Name",
                 TextField.class, null,
-                200, null, String.class, "",
+                300, null, String.class, "",
                 false, true, true));
         AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(
                 "type", "Type",
@@ -235,7 +235,7 @@ public final class AgoControlSiteFields {
         AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(
                 "unit", "Unit",
                 TextField.class, null,
-                20, null, String.class, "",
+                25, null, String.class, "",
                 false, false, true));
 
 

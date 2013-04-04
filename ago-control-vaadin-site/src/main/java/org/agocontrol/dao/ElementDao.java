@@ -1,6 +1,7 @@
 package org.agocontrol.dao;
 
 import org.agocontrol.model.Element;
+import org.agocontrol.model.ElementType;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
 
@@ -95,6 +96,23 @@ public final class ElementDao {
         final TypedQuery<Element> query = entityManager.createQuery("select e from Element as e where e.owner=:owner",
                 Element.class);
         query.setParameter("owner", owner);
+        return query.getResultList();
+    }
+
+    /**
+     * Gets given element.
+     * @param entityManager the entity manager.
+     * @param owner the owning company
+     * @param type the element type
+     * @return list of elements.
+     */
+    public static final List<Element> getElements(final EntityManager entityManager, final Company owner, final
+    ElementType type) {
+        final TypedQuery<Element> query = entityManager.createQuery("select e from Element as e where e.owner=:owner" +
+                " e.type=:type",
+                Element.class);
+        query.setParameter("owner", owner);
+        query.setParameter("type", type);
         return query.getResultList();
     }
 

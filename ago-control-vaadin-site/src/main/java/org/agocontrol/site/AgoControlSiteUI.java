@@ -21,8 +21,11 @@ import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinServletRequest;
 import org.agocontrol.client.AgoControlBusClient;
 import org.agocontrol.dao.BusDao;
+import org.agocontrol.dao.ElementDao;
 import org.agocontrol.model.Bus;
 import org.agocontrol.model.BusConnectionStatus;
+import org.agocontrol.model.Element;
+import org.agocontrol.model.ElementType;
 import org.agocontrol.site.viewlet.bus.BusFlowViewlet;
 import org.agocontrol.site.viewlet.element.ElementFlowViewlet;
 import org.agocontrol.site.viewlet.record.RecordFlowViewlet;
@@ -284,6 +287,19 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
                         new ViewletDescriptor("footer", "Footer", "This is footer.", null,
                                 CompanyFooterViewlet.class.getCanonicalName())
                 ))));
+
+        /*final EntityManager entityManager = getSite().getSiteContext().getObject(EntityManager.class);
+        final Company company = getSite().getSiteContext().getObject(Company.class);
+        if (company != null) {
+            final List<Element> buildings = ElementDao.getElements(entityManager, company, ElementType.Building);
+            for (final Element building : buildings) {
+                viewDescriptors.add(new ViewDescriptor(building.getName(), null, null,
+                        new ViewVersion(0, "master", building.getName(), "",
+                        "", FixedWidthView.class.getCanonicalName(), new String[]{},
+                        Arrays.asList(new ViewletDescriptor[0])
+                )));
+            }
+        }*/
 
         viewDescriptors.add(new ViewDescriptor("default", null, null, new ViewVersion(0, "master", "Default", "",
                 "This is default view.", FixedWidthView.class.getCanonicalName(), new String[]{},
