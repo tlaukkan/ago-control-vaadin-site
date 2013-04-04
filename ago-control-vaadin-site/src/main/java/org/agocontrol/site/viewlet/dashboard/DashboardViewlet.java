@@ -27,6 +27,7 @@ public class DashboardViewlet extends AbstractViewlet {
     private final Site site;
     private final SiteContext siteContext;
     private final EntityManager entityManager;
+    private final EventPanel eventPanel;
 
     public DashboardViewlet() {
         site = ((AgoControlSiteUI) UI.getCurrent()).getSite();
@@ -51,6 +52,11 @@ public class DashboardViewlet extends AbstractViewlet {
         buildingControlPanel = new BuildingControlPanel();
         buildingControlPanel.setSizeFull();
         gridLayout.addComponent(buildingControlPanel, 0, 1);
+
+        eventPanel = new EventPanel();
+        eventPanel.setSizeFull();
+        gridLayout.addComponent(eventPanel, 1,1);
+
         setCompositionRoot(gridLayout);
     }
 
@@ -65,6 +71,8 @@ public class DashboardViewlet extends AbstractViewlet {
             buildingSelectPanel.enter(parameters);
             buildingControlPanel.enter(parameters);
         }
+
+        eventPanel.enter(parameters);
     }
 
 }

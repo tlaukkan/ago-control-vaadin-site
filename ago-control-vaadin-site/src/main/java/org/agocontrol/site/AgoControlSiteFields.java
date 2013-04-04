@@ -17,11 +17,13 @@
 package org.agocontrol.site;
 
 import com.vaadin.data.Validator;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.TextField;
 import org.agocontrol.model.Bus;
 import org.agocontrol.model.BusConnectionStatus;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.ElementType;
+import org.agocontrol.model.Event;
 import org.agocontrol.model.Record;
 import org.agocontrol.model.RecordSet;
 import org.agocontrol.model.RecordType;
@@ -238,6 +240,33 @@ public final class AgoControlSiteFields {
                 25, null, String.class, "",
                 false, false, true));
 
+        AgoControlSiteFields.add(Event.class, new FieldDescriptor(
+                "created", "Created",
+                TimestampField.class, TimestampFormatter.class,
+                100, null, Date.class, null, true,
+                true, true));
+        AgoControlSiteFields.add(Event.class, new FieldDescriptor(
+                "content", "Content",
+                TextField.class, null,
+                368, null, String.class, "",
+                false, true, true));
 
+        AgoControlSiteFields.add(Event.class, new FieldDescriptor(
+                "processingError", "Processing Error",
+                CheckBox.class, null,
+                100, null, Boolean.class, false,
+                false, true, true));
+
+
+        AgoControlSiteFields.add(Event.class, new FieldDescriptor(
+                "processed", "Processed",
+                TimestampField.class, TimestampFormatter.class,
+                150, null, Date.class, null, true,
+                true, false));
+        AgoControlSiteFields.add(Event.class, new FieldDescriptor(
+                "modified", "Modified",
+                TimestampField.class, TimestampFormatter.class,
+                150, null, Date.class, null,
+                true, true, true));
     }
 }
