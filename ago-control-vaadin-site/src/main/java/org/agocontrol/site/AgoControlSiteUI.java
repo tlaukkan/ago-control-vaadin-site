@@ -142,6 +142,9 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
             final List<Bus> buses = BusDao.getBuses(entityManager, company);
             for (final Bus bus : buses) {
 
+                if (bus.getJsonRpcUrl() == null || bus.getJsonRpcUrl().length() ==0) {
+                    continue;
+                }
 
                 final Thread eventFetchThread = new Thread(new Runnable() {
                     @Override
@@ -211,6 +214,10 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
                     final List<Bus> buses = BusDao.getBuses(entityManager, company);
                     int treeIndex = 0;
                     for (final Bus bus : buses) {
+
+                        if (bus.getJsonRpcUrl() == null || bus.getJsonRpcUrl().length() ==0) {
+                            continue;
+                        }
 
                         bus.setConnectionStatus(BusConnectionStatus.Synchronizing);
                         BusDao.saveBuses(entityManager, Collections.singletonList(bus));
