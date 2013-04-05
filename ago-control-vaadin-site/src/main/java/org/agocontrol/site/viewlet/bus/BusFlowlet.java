@@ -27,8 +27,6 @@ import org.vaadin.addons.sitekit.flow.AbstractFlowlet;
 import org.vaadin.addons.sitekit.grid.ValidatingEditor;
 import org.vaadin.addons.sitekit.grid.ValidatingEditorStateListener;
 
-import org.vaadin.addons.sitekit.web.BareSiteFields;
-
 import javax.persistence.EntityManager;
 
 /**

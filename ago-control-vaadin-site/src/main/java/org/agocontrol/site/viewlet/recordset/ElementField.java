@@ -30,8 +30,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 /**
- * @author Tommi S.E. Laukkanen
+ * Element field.
  *
+ * @author Tommi S.E. Laukkanen
  */
 public class ElementField extends Select {
     /** Serial version UID. */

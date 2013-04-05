@@ -1,3 +1,18 @@
+/**
+ * Copyright 2013 Tommi S.E. Laukkanen
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.agocontrol.site.viewlet.dashboard;
 
 import com.vaadin.ui.GridLayout;
@@ -21,14 +36,34 @@ import java.util.List;
  */
 public class DashboardViewlet extends AbstractViewlet {
 
-    final BuildingSelectPanel buildingSelectPanel;
-
-    final BuildingControlPanel buildingControlPanel;
+    /**
+     * The building select panel.
+     */
+    private final BuildingSelectPanel buildingSelectPanel;
+    /**
+     * The building control panel.
+     */
+    private final BuildingControlPanel buildingControlPanel;
+    /**
+     * The site.
+     */
     private final Site site;
+    /**
+     * The site context.
+     */
     private final SiteContext siteContext;
+    /**
+     * The entity manager.
+     */
     private final EntityManager entityManager;
+    /**
+     * The event panel.
+     */
     private final EventPanel eventPanel;
 
+    /**
+     * Default constructor which constructs component hierarchy.
+     */
     public DashboardViewlet() {
         site = ((AgoControlSiteUI) UI.getCurrent()).getSite();
         siteContext = getSite().getSiteContext();
@@ -66,7 +101,7 @@ public class DashboardViewlet extends AbstractViewlet {
     }
 
     @Override
-    public void enter(final String parameters) {
+    public final void enter(final String parameters) {
         final Company company = siteContext.getObject(Company.class);
 
         final List<Element> buildings = ElementDao.getElements(entityManager, company, ElementType.BUILDING);
