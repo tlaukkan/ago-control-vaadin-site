@@ -248,7 +248,7 @@ public final class AgoControlSiteFields {
         AgoControlSiteFields.add(Event.class, new FieldDescriptor(
                 "content", "Content",
                 TextField.class, null,
-                368, null, String.class, "",
+                -1, null, String.class, "",
                 false, true, true));
 
         AgoControlSiteFields.add(Event.class, new FieldDescriptor(

@@ -263,6 +263,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
 
         final SiteContext siteContext = new SiteContext();
         final EntityManager entityManager = entityManagerFactory.createEntityManager();
+        siteContext.putObject(EntityManagerFactory.class, entityManagerFactory);
         siteContext.putObject(EntityManager.class, entityManager);
         siteContext.putObject(Company.class, CompanyDao.getCompany(entityManager,
                 ((VaadinServletRequest) VaadinService.getCurrentRequest()).getHttpServletRequest().getServerName()));
@@ -304,7 +305,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         }*/
 
         viewDescriptors.add(new ViewDescriptor("default", null, null, new ViewVersion(0, "master", "Default", "",
-                "This is default view.", FixedWidthView.class.getCanonicalName(), new String[]{},
+                "This is default view.", FixedWidthView.class.getCanonicalName(), new String[]{"administrator", "user"},
                 Arrays.asList(new ViewletDescriptor(
                         "content", "Dashboard Viewlet", "This is Dashboard viewlet.", null,
                         DashboardViewlet.class.getCanonicalName())

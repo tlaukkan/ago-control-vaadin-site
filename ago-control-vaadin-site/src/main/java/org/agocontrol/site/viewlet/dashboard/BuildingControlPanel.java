@@ -7,23 +7,24 @@ import com.vaadin.ui.Embedded;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.Reindeer;
 import org.agocontrol.dao.ElementDao;
 import org.agocontrol.dao.RecordDao;
 import org.agocontrol.dao.RecordSetDao;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.Record;
 import org.agocontrol.model.RecordSet;
-import org.agocontrol.model.RecordType;
 import org.agocontrol.site.AgoControlSiteUI;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
+import org.vaadin.addons.sitekit.site.AbstractViewlet;
 import org.vaadin.addons.sitekit.site.Site;
 import org.vaadin.addons.sitekit.site.SiteContext;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  *
  * @author Tommi S.E. Laukkanen
  */
-public class BuildingControlPanel extends Panel {
+public class BuildingControlPanel extends AbstractViewlet {
     /** The logger. */
     private static final Logger LOGGER = Logger.getLogger(BuildingControlPanel.class);
 
@@ -43,6 +44,10 @@ public class BuildingControlPanel extends Panel {
      * The layout.
      */
     private final VerticalLayout layout;
+    /**
+     * The elementLayout.
+     */
+    private final VerticalLayout elementLayout;
     /**
      * The site.
      */
@@ -108,6 +113,20 @@ public class BuildingControlPanel extends Panel {
         layout = new VerticalLayout();
         layout.setSpacing(true);
         layout.setMargin(true);
+        layout.setStyleName(Reindeer.LAYOUT_WHITE);
+        layout.setSizeFull();
+
+        final Label title = new Label("Control Panel");
+        title.setIcon(getSite().getIcon("inventory"));
+        title.setStyleName(Reindeer.LABEL_H2);
+        layout.addComponent(title);
+        layout.setExpandRatio(title, 0);
+
+        elementLayout = new VerticalLayout();
+        elementLayout.setSpacing(true);
+        elementLayout.setMargin(false);
+        layout.addComponent(elementLayout);
+        layout.setExpandRatio(elementLayout, 1);
 
         roomIcon = site.getIcon("room");
         deviceIcon = site.getIcon("device");
@@ -116,7 +135,7 @@ public class BuildingControlPanel extends Panel {
         humidityIcon = site.getIcon("humidity");
         eventIcon = site.getIcon("event");
 
-        setContent(layout);
+        setCompositionRoot(layout);
 
         // the Refresher polls automatically
         final Refresher refresher = new Refresher();
@@ -196,7 +215,7 @@ public class BuildingControlPanel extends Panel {
                 LOGGER.warn("Record reader thread death wait interrupted.");
             }
         }
-        layout.removeAllComponents();
+        elementLayout.removeAllComponents();
         recordsLayouts.clear();
         recordsQueue.clear();
         recordReaderExitRequested = false;
@@ -223,7 +242,7 @@ public class BuildingControlPanel extends Panel {
             }
 
             final HorizontalLayout elementLayout = new HorizontalLayout();
-            layout.addComponent(elementLayout);
+            this.elementLayout.addComponent(elementLayout);
             elementLayout.setSpacing(true);
 
             final Resource elementIcon;
@@ -255,30 +274,36 @@ public class BuildingControlPanel extends Panel {
             recordLayout.setColumns(4);
             recordLayout.setRows(1);
 
-            layout.addComponent(recordLayout);
+            this.elementLayout.addComponent(recordLayout);
             recordsLayouts.put(element.getElementId(), recordLayout);
 
-            recordReaderThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
+        }
 
-                        final List<RecordSet> recordSets = RecordSetDao.getRecordSets(
-                                entityManager, element);
-                        for (final RecordSet recordSet : recordSets) {
-                            recordsQueue.put(RecordDao.getRecords(entityManager, recordSet));
-                            if (recordReaderExitRequested) {
-                                break;
+        recordReaderThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final EntityManager threadEntityManager = ((EntityManagerFactory) getSite().getSiteContext()
+                            .getObject(EntityManagerFactory.class)).createEntityManager();
+                    for (final Element element : elements) {
+                        final List<RecordSet> recordSets = RecordSetDao.getRecordSets(threadEntityManager, element);
+                        if (recordsLayouts.containsKey(element.getElementId())) {
+                            for (final RecordSet recordSet : recordSets) {
+                                recordsQueue.put(RecordDao.getRecords(threadEntityManager, recordSet));
+                                if (recordReaderExitRequested) {
+                                    break;
+                                }
                             }
                         }
-
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
                     }
+
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
                 }
-            });
-            recordReaderThread.start();
-        }
+            }
+        });
+        recordReaderThread.start();
+
     }
 
 }

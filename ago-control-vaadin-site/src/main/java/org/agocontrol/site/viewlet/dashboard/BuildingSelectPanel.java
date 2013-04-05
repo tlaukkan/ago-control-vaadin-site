@@ -9,12 +9,14 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.Reindeer;
 import org.agocontrol.dao.ElementDao;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.ElementType;
 import org.agocontrol.site.AgoControlSiteUI;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
+import org.vaadin.addons.sitekit.site.AbstractViewlet;
 import org.vaadin.addons.sitekit.site.Site;
 import org.vaadin.addons.sitekit.site.SiteContext;
 
@@ -26,7 +28,7 @@ import java.util.List;
  *
  * @author Tommi S.E. Laukkanen
  */
-public class BuildingSelectPanel extends Panel {
+public class BuildingSelectPanel extends AbstractViewlet {
     /** The logger. */
     private static final Logger LOGGER = Logger.getLogger(BuildingSelectPanel.class);
 
@@ -76,6 +78,7 @@ public class BuildingSelectPanel extends Panel {
         layout = new VerticalLayout();
         layout.setSpacing(true);
         layout.setMargin(true);
+        layout.setStyleName(Reindeer.LAYOUT_WHITE);
 
         final HorizontalLayout titleLayout = new HorizontalLayout();
         layout.addComponent(titleLayout);
@@ -92,7 +95,7 @@ public class BuildingSelectPanel extends Panel {
         titleLayout.addComponent(buildingComboBox);
         titleLayout.setComponentAlignment(buildingComboBox, Alignment.MIDDLE_LEFT);
         titleLayout.setExpandRatio(buildingComboBox, 0.9f);
-        buildingComboBox.setWidth(100, Unit.PERCENTAGE);
+        //buildingComboBox.setWidth(100, Unit.PERCENTAGE);
         buildingComboBox.setNullSelectionAllowed(false);
         buildingComboBox.setNewItemsAllowed(false);
         buildingComboBox.setTextInputAllowed(false);
@@ -114,7 +117,7 @@ public class BuildingSelectPanel extends Panel {
         roomsLayout.setSpacing(true);
         roomsLayout.setSizeFull();
 
-        setContent(layout);
+        setCompositionRoot(layout);
     }
 
     /**

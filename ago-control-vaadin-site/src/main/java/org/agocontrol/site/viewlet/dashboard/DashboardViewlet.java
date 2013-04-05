@@ -46,14 +46,19 @@ public class DashboardViewlet extends AbstractViewlet {
 
 
         buildingSelectPanel = new BuildingSelectPanel();
+        //buildingSelectPanel.setCaption("Building Selection");
         //buildingSelectPanel.setSizeFull();
-        gridLayout.addComponent(buildingSelectPanel, 0, 0);
+        gridLayout.addComponent(buildingSelectPanel, 0, 0, 1, 0);
 
         buildingControlPanel = new BuildingControlPanel();
+        //buildingControlPanel.setCaption("Control Panel");
+        //buildingControlPanel.setHeight(200, Unit.PIXELS);
         buildingControlPanel.setSizeFull();
         gridLayout.addComponent(buildingControlPanel, 0, 1);
 
         eventPanel = new EventPanel();
+        //eventPanel.setCaption("Bus Events");
+        //ventPanel.setHeight(200, Unit.PIXELS);
         eventPanel.setSizeFull();
         gridLayout.addComponent(eventPanel, 1,1);
 
