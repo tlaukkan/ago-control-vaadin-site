@@ -122,7 +122,7 @@ public final class AgoControlSiteFields {
                 "jsonRpcUrl", "JSON RPC URL",
                 TextField.class, null,
                 100, null, String.class, "",
-                false, true, true));
+                false, true, false));
         AgoControlSiteFields.add(Bus.class, new FieldDescriptor(
                 "connectionStatus", "Connection Status",
                 BusConnectionStatusField.class, null,
