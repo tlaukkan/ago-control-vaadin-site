@@ -123,7 +123,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
 
         final String webappUrl = AgoControlSiteUI.class.getClassLoader().getResource("webapp/").toExternalForm();
 
-        final Server server = new Server(8081);
+        final Server server = new Server(8082);
 
         final WebAppContext context = new WebAppContext();
         context.setContextPath("/");
