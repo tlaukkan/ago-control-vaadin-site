@@ -57,9 +57,22 @@ public final class Bus implements Serializable {
     @Column(nullable = false)
     private String name;
 
-    /** JSON RPC URL. */
-    @Column(nullable = false)
-    private String jsonRpcUrl;
+    /** Host. */
+    @Column(nullable = true)
+    private String host;
+
+    /** Port. */
+    @Column(nullable = true)
+    private Integer port;
+
+    /** User name. */
+    @Column(nullable = true)
+    private String userName;
+
+    /** User password. */
+    @Column(nullable = true)
+    private String userPassword;
+
 
     /** Connection Status. */
     @Column(nullable = false)
@@ -91,13 +104,20 @@ public final class Bus implements Serializable {
     /**
      * @param owner the owning company
      * @param name the name
-     * @param jsonRpcUrl the JSON RPC URL
+     * @param host the host
+     * @param port the port
+     * @param userName the user name
+     * @param userPassword the user password
      * @param created the create time stamp
      */
-    public Bus(final Company owner, final String name, final String jsonRpcUrl, final Date created) {
+    public Bus(final Company owner, final String name, final String host, final Integer port, final String userName
+            , final String userPassword, final Date created) {
         this.owner = owner;
         this.name = name;
-        this.jsonRpcUrl = jsonRpcUrl;
+        this.host = host;
+        this.port = port;
+        this.userName = userName;
+        this.userPassword = userPassword;
         this.created = created;
     }
 
@@ -144,17 +164,59 @@ public final class Bus implements Serializable {
     }
 
     /**
-     * @return the jsonRpcUrl
+     * @return the host
      */
-    public String getJsonRpcUrl() {
-        return jsonRpcUrl;
+    public String getHost() {
+        return host;
     }
 
     /**
-     * @param jsonRpcUrl the jsonRpcUrl to set
+     * @param host the host to set
      */
-    public void setJsonRpcUrl(final String jsonRpcUrl) {
-        this.jsonRpcUrl = jsonRpcUrl;
+    public void setHost(final String host) {
+        this.host = host;
+    }
+
+    /**
+     * @return the port
+     */
+    public Integer getPort() {
+        return port;
+    }
+
+    /**
+     * @param port the port to set
+     */
+    public void setPort(final Integer port) {
+        this.port = port;
+    }
+
+    /**
+     * @return the userName
+     */
+    public String getUserName() {
+        return userName;
+    }
+
+    /**
+     * @param userName the user name to set
+     */
+    public void setUserName(final String userName) {
+        this.userName = userName;
+    }
+
+    /**
+     * @return the userPassword
+     */
+    public String getUserPassword() {
+        return userPassword;
+    }
+
+    /**
+     * @param userPassword the userPassword to set
+     */
+    public void setUserPassword(final String userPassword) {
+        this.userPassword = userPassword;
     }
 
     /**

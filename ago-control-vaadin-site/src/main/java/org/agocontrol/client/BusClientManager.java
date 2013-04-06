@@ -85,6 +85,7 @@ public class BusClientManager {
                     try {
                         final BusClient client = clients.get(bus);
                         client.close();
+                        entityManager.refresh(bus);
                         bus.setConnectionStatus(BusConnectionStatus.Disconnected);
                         BusDao.saveBuses(entityManager, Collections.singletonList(bus));
                     } catch (final Exception e) {
@@ -122,7 +123,10 @@ public class BusClientManager {
         final List<Company> companies = CompanyDao.getCompanies(entityManager);
         for (final Company company : companies) {
             for (final Bus bus : BusDao.getBuses(entityManager, company)) {
-                if (bus.getJsonRpcUrl() != null && bus.getJsonRpcUrl().length() > 0) {
+                if (bus.getHost() != null && bus.getHost().length() > 0
+                        && bus.getPort() != null && bus.getPort() > 0
+                        && bus.getUserName() != null && bus.getUserName().length() > 0
+                        && bus.getUserPassword() != null && bus.getUserPassword().length() > 0) {
                     activeBuses.add(bus);
                 }
             }
@@ -130,6 +134,7 @@ public class BusClientManager {
 
         for (final Bus bus : clients.keySet()) {
             if (!activeBuses.contains(bus)) {
+                entityManager.refresh(bus);
                 final BusClient client = clients.remove(bus);
                 try {
                     client.close();
@@ -145,6 +150,7 @@ public class BusClientManager {
             if (!clients.containsKey(bus)) {
                 try {
                     clients.put(bus, new BusClient(entityManagerFactory, bus));
+                    entityManager.refresh(bus);
                     bus.setConnectionStatus(BusConnectionStatus.Connected);
                     BusDao.saveBuses(entityManager, Collections.singletonList(bus));
                 } catch (final Exception e) {

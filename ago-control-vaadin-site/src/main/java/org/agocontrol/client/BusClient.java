@@ -139,16 +139,20 @@ public class BusClient {
         this.entityManagerFactory = entityManagerFactory;
         this.bus = bus;
 
-        final String userName = "agocontrol";
-        final String password = "letmein";
+        final String userName = bus.getUserName();
+        final String password = bus.getUserPassword();
+        final String host = bus.getHost();
+        final Integer port = bus.getPort();
+        //final String userName = "agocontrol";
+        //final String password = "letmein";
+
 
         final Properties properties = new Properties();
         properties.put("java.naming.factory.initial",
                 "org.apache.qpid.jndi.PropertiesFileInitialContextFactory");
         properties.put("connectionfactory.qpidConnectionfactory",
                 "amqp://" + userName + ":" + password + "@agocontrolvaadinsite/client" +
-                        "?brokerlist='tcp://localhost:5672'");
-       // properties.put("destination.topicExchange","agocontrol");
+                        "?brokerlist='tcp://" + host + ":" + port + "'");
 
         context = new InitialContext(properties);
         connectionFactory = (ConnectionFactory) context.lookup("qpidConnectionfactory");

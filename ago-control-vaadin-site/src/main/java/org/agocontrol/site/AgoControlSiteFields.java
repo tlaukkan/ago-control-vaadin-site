@@ -117,11 +117,28 @@ public final class AgoControlSiteFields {
                 TextField.class, null,
                 100, null, String.class, "",
                 false, true, true));
+
         AgoControlSiteFields.add(Bus.class, new FieldDescriptor(
-                "jsonRpcUrl", "JSON RPC URL",
+                "host", "Host",
                 TextField.class, null,
                 100, null, String.class, "",
-                false, true, false));
+                false, false, false));
+        AgoControlSiteFields.add(Bus.class, new FieldDescriptor(
+                "port", "Port",
+                TextField.class, null,
+                60, null, Integer.class, "",
+                false, true, true));
+        AgoControlSiteFields.add(Bus.class, new FieldDescriptor(
+                "userName", "User Name",
+                TextField.class, null,
+                100, null, String.class, "",
+                false, false, false));
+        AgoControlSiteFields.add(Bus.class, new FieldDescriptor(
+                "userPassword", "User Password",
+                TextField.class, null,
+                100, null, String.class, "",
+                false, false, false));
+
         AgoControlSiteFields.add(Bus.class, new FieldDescriptor(
                 "connectionStatus", "Connection Status",
                 BusConnectionStatusField.class, null,
