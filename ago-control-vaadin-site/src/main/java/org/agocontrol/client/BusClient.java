@@ -16,23 +16,17 @@
 package org.agocontrol.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.org.apache.xpath.internal.functions.FuncStartsWith;
+import org.agocontrol.dao.BusDao;
 import org.agocontrol.dao.ElementDao;
 import org.agocontrol.dao.EventDao;
-import org.agocontrol.dao.RecordDao;
-import org.agocontrol.dao.RecordSetDao;
 import org.agocontrol.model.Bus;
+import org.agocontrol.model.BusConnectionStatus;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.ElementType;
 import org.agocontrol.model.Event;
-import org.agocontrol.model.Record;
-import org.agocontrol.model.RecordSet;
-import org.agocontrol.model.RecordType;
 import org.apache.log4j.Logger;
 import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.messaging.Address;
-import org.eclipse.persistence.exceptions.i18n.ExceptionMessageGenerator;
-import org.vaadin.addons.sitekit.dao.CompanyDao;
 import org.vaadin.addons.sitekit.model.Company;
 
 import javax.jms.Connection;
@@ -48,7 +42,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,24 +56,23 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
-//TODO avoid event processing overlap in companies with multiple busses.
-//TODO handle tree index in companies with multiple busses.
-
 /**
  * Ago control qpid client.
  *
  * @author Tommi S.E. Laukkanen
  */
-public class AgoControlQpidClient {
+public class BusClient {
     /** The logger. */
-    private static final Logger LOGGER = Logger.getLogger(AgoControlQpidClient.class);
+    private static final Logger LOGGER = Logger.getLogger(BusClient.class);
     /** Default bus name. */
     private static final String DEFAULT = "";
     /**
      * The entityManagerFactory.
      */
     private EntityManagerFactory entityManagerFactory;
-    /** JSON object mapper. */
+    /**
+     * JSON object mapper.
+     * */
     private final ObjectMapper mapper = new ObjectMapper();
     /**
      * The context.
@@ -134,18 +126,16 @@ public class AgoControlQpidClient {
      * The bus this client is connected to.
      */
     private final Bus bus;
-    /**
-     * The event processor thread.
-     */
-    private final Thread eventProcessorThread;
 
     /**
      * Constructor which sets entityManagerFactory.
      *
      * @param entityManagerFactory the entityManagerFactory
      * @param bus the bus to connect to
+     *
+     * @throws Exception if exception occurs in connecting to bus.
      */
-    public AgoControlQpidClient(final EntityManagerFactory entityManagerFactory, final Bus bus) throws Exception {
+    public BusClient(final EntityManagerFactory entityManagerFactory, final Bus bus) throws Exception {
         this.entityManagerFactory = entityManagerFactory;
         this.bus = bus;
 
@@ -194,24 +184,6 @@ public class AgoControlQpidClient {
         });
         eventHandlerThread.start();
 
-        eventProcessorThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                final EntityManager entityManager = entityManagerFactory.createEntityManager();
-                final Company company = entityManager.getReference(Company.class, bus.getOwner().getCompanyId());
-                while (!closeRequested) {
-                    try {
-                        Thread.sleep(100);
-                        processEvent(entityManager, company);
-                    } catch (final Throwable t) {
-                        LOGGER.error("Error in processing events.", t);
-                    }
-                }
-                entityManager.close();
-            }
-        });
-        eventProcessorThread.start();
-
         replyHandlerThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -251,6 +223,25 @@ public class AgoControlQpidClient {
         });
         inventoryRequestThread.start();
     }
+
+
+    /**
+     * Closes client.
+     *
+     * @throws Exception if exception occurs.
+     */
+    public final void close() throws Exception {
+        closeRequested = true;
+        inventoryRequestThread.interrupt();
+        inventoryRequestThread.join();
+        replyHandlerThread.interrupt();
+        replyHandlerThread.join();
+        eventHandlerThread.interrupt();
+        eventHandlerThread.join();
+        connection.close();
+        context.close();
+    }
+
 
     /**
      * Request inventory.
@@ -376,7 +367,7 @@ public class AgoControlQpidClient {
         final LinkedList<Element> elementsToIterate = new LinkedList<Element>();
         elementsToIterate.addAll(roots);
 
-        int startTreeIndex = 0;
+        int startTreeIndex = bus.getBusId().hashCode();
         int treeIndex = startTreeIndex;
         while (elementsToIterate.size() > 0) {
             final Element element = elementsToIterate.removeFirst();
@@ -423,74 +414,6 @@ public class AgoControlQpidClient {
     }
 
     /**
-     * Processes unprocessed events.
-     *
-     * @param entityManager the entityManager
-     * @param owner the owning company
-     */
-    private void processEvent(final EntityManager entityManager, final Company owner) {
-        final List<Event> events = EventDao.getUnprocessedEvents(entityManager, owner);
-
-        for (final Event event : events) {
-            try {
-                final Map<String, Object> eventMessage = mapper.readValue(event.getContent(), HashMap.class);
-
-                final String elementId = (String) eventMessage.get("uuid");
-                final String name = (String) eventMessage.get("event");
-                final String unit = (String) eventMessage.get("unit");
-                final String valueString = (String) eventMessage.get("level");
-
-                final Element element = ElementDao.getElement(entityManager, elementId);
-
-                if (element != null && element.getOwner().equals(owner) && valueString != null &&
-                        valueString.length() != 0) {
-
-                    RecordSet recordSet = RecordSetDao.getRecordSet(entityManager, element, name);
-
-                    if (recordSet == null) {
-                        RecordType recordType = RecordType.OTHER;
-                        if (name.toLowerCase().contains("humidity")) {
-                            recordType = RecordType.HUMIDITY;
-                        } else if (name.toLowerCase().contains("brightness")) {
-                            recordType = RecordType.BRIGHTNESS;
-                        } else if (name.toLowerCase().contains("temperature")) {
-                            recordType = RecordType.TEMPERATURE;
-                        }
-                        recordSet = new RecordSet(
-                                owner,
-                                element,
-                                name,
-                                recordType,
-                                unit,
-                                event.getCreated()
-                        );
-                        RecordSetDao.saveRecordSets(entityManager, Collections.singletonList(recordSet));
-                    }
-
-                    final BigDecimal value = new BigDecimal(valueString);
-
-                    RecordDao.saveRecords(entityManager, Collections.singletonList(new Record(
-                            owner,
-                            recordSet,
-                            value,
-                            event.getCreated()
-                    )));
-
-                    event.setProcessingError(false);
-                } else {
-                    event.setProcessingError(true);
-                }
-            } catch (Throwable t) {
-                LOGGER.warn("Error processing event: " + event.getEventId());
-                event.setProcessingError(true);
-            }
-            event.setProcessed(new Date());
-        }
-
-        EventDao.saveEvents(entityManager, events);
-    }
-
-    /**
      * Converts UTF-8 encoded byte to String.
      *
      * @param bytes the bytes
@@ -520,25 +443,5 @@ public class AgoControlQpidClient {
         }
         return map;
     }
-
-    /**
-     * Closes client.
-     *
-     * @throws Exception if exception occurs.
-     */
-    public final void close() throws Exception {
-        closeRequested = true;
-        inventoryRequestThread.interrupt();
-        inventoryRequestThread.join();
-        replyHandlerThread.interrupt();
-        replyHandlerThread.join();
-        eventHandlerThread.interrupt();
-        eventHandlerThread.join();
-        eventProcessorThread.interrupt();
-        eventProcessorThread.join();
-        connection.close();
-        context.close();
-    }
-
 
 }

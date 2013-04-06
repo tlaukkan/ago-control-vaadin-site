@@ -2,9 +2,7 @@ package org.agocontrol.client;
 
 import org.agocontrol.model.Bus;
 import org.apache.log4j.BasicConfigurator;
-import org.apache.qpid.AMQUnresolvedAddressException;
 import org.apache.qpid.client.AMQAnyDestination;
-import org.apache.qpid.framing.AMQShortString;
 import org.apache.qpid.messaging.Address;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.junit.Before;
@@ -17,8 +15,6 @@ import org.vaadin.addons.sitekit.util.PropertiesUtil;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -82,7 +78,7 @@ public class AgoControlAmqpClientQpidTest {
     public void testQpidClient() throws Exception {
         final Bus bus = new Bus();
         bus.setOwner(owner);
-        final AgoControlQpidClient client = new AgoControlQpidClient(entityManagerFactory, bus);
+        final BusClient client = new BusClient(entityManagerFactory, bus);
 
         while (true) {
             Thread.sleep(100);
