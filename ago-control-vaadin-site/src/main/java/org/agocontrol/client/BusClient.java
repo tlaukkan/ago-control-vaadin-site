@@ -296,8 +296,8 @@ public class BusClient {
             final Map<String, Object> rooms = (Map) result.get("rooms");
             for (final String roomId : ((Map<String, Object>) result.get("rooms")).keySet()) {
                 final Map<String, Object> roomMessage = (Map) rooms.get(roomId);
-                final String roomName = bytesToString(roomMessage.get("name"));
-                final String roomLocation = bytesToString(roomMessage.get("location"));
+                final String roomName = (String) roomMessage.get("name");
+                final String roomLocation = (String) roomMessage.get("location");
 
                 final Element building;
                 if (nameBuildingMap.containsKey(roomLocation)) {
@@ -326,9 +326,9 @@ public class BusClient {
             final Map<String, Object> inventory = (Map) result.get("inventory");
             for (final String elementId : ((Map<String, Object>) result.get("inventory")).keySet()) {
                 final Map<String, Object> elementMessage = (Map) inventory.get(elementId);
-                final String name = bytesToString(elementMessage.get("name"));
-                final String roomId = bytesToString(elementMessage.get("room"));
-                final String category = bytesToString(elementMessage.get("devicetype"));
+                final String name = (String) elementMessage.get("name");
+                final String roomId = (String) elementMessage.get("room");
+                final String category = (String) elementMessage.get("devicetype");
 
                 final Element parent;
                 if (idElementMap.containsKey(roomId)) {
@@ -454,7 +454,23 @@ public class BusClient {
             final String key = keys.nextElement();
             map.put(key, message.getObject(key));
         }
+        convertByteArrayValuesToStrings(map);
         return map;
     }
 
+    /**
+     * Converts byte array values to string recursively.
+     * @param map the map
+     */
+    private void convertByteArrayValuesToStrings(final Map<String, Object> map) {
+        for (final String key : map.keySet()) {
+            Object object = map.get(key);
+            if (object instanceof Map) {
+                convertByteArrayValuesToStrings((Map) object);
+            }
+            if (object instanceof byte[]) {
+                map.put(key, bytesToString(object));
+            }
+        }
+    }
 }
