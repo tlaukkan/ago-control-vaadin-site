@@ -52,9 +52,9 @@ import java.util.TreeSet;
  * Thread safe.
  * @author Tommi S.E. Laukkanen
  */
-public class AgoControlBusClient {
+public class AgoControlBusRpcClient {
     /** The logger. */
-    private static final Logger LOGGER = Logger.getLogger(AgoControlBusClient.class);
+    private static final Logger LOGGER = Logger.getLogger(AgoControlBusRpcClient.class);
     /** Default bus name. */
     private static final String DEFAULT = "";
     /**
@@ -79,7 +79,7 @@ public class AgoControlBusClient {
      * Constructor for setting the JSON RPC URL.
      * @param jsonRpcUrl the JSON RPC URL
      */
-    public AgoControlBusClient(final String jsonRpcUrl) {
+    public AgoControlBusRpcClient(final String jsonRpcUrl) {
         this.jsonRpcUrl = jsonRpcUrl;
 
     }

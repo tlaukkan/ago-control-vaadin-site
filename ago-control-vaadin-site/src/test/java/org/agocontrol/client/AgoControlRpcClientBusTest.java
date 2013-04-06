@@ -1,6 +1,5 @@
 package org.agocontrol.client;
 
-import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import org.apache.log4j.BasicConfigurator;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.junit.Before;
@@ -13,14 +12,13 @@ import org.vaadin.addons.sitekit.util.PropertiesUtil;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Test class for resting ago control client.
  */
-public class AgoControlClientBusTest {
+public class AgoControlRpcClientBusTest {
     /** The properties category used in instantiating default services. */
     private static final String PROPERTIES_CATEGORY = "test";
     /** The persistence unit to be used. */
@@ -71,14 +69,14 @@ public class AgoControlClientBusTest {
     @Test
     @Ignore
     public void testInventorySynchronization() throws Exception, Throwable {
-        final AgoControlBusClient client = new AgoControlBusClient("http://127.0.0.1:8008/jsonrpc");
+        final AgoControlBusRpcClient client = new AgoControlBusRpcClient("http://127.0.0.1:8008/jsonrpc");
         client.synchronizeInventory(entityManager, owner, 0);
     }
 
     @Test
     @Ignore
     public void testEventSubscribing() throws Exception, Throwable {
-        final AgoControlBusClient client = new AgoControlBusClient("http://127.0.0.1:8008/jsonrpc");
+        final AgoControlBusRpcClient client = new AgoControlBusRpcClient("http://127.0.0.1:8008/jsonrpc");
         final String subscriptionId = client.subscribe();
         client.fetch(entityManager, owner, subscriptionId);
         client.unsubscribe(subscriptionId);

@@ -19,15 +19,11 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinServletRequest;
-import org.agocontrol.client.AgoControlBusClient;
+import org.agocontrol.client.AgoControlBusRpcClient;
 import org.agocontrol.dao.BusDao;
-import org.agocontrol.dao.ElementDao;
 import org.agocontrol.model.Bus;
 import org.agocontrol.model.BusConnectionStatus;
-import org.agocontrol.model.Element;
-import org.agocontrol.model.ElementType;
 import org.agocontrol.site.viewlet.bus.BusFlowViewlet;
-import org.agocontrol.site.viewlet.dashboard.BuildingControlPanel;
 import org.agocontrol.site.viewlet.dashboard.DashboardViewlet;
 import org.agocontrol.site.viewlet.element.ElementFlowViewlet;
 import org.agocontrol.site.viewlet.record.RecordFlowViewlet;
@@ -154,7 +150,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
                         final Company threadCompany = threadEntityManager.getReference(Company.class,
                                 company.getCompanyId());
 
-                        final AgoControlBusClient client = new AgoControlBusClient(bus.getJsonRpcUrl());
+                        final AgoControlBusRpcClient client = new AgoControlBusRpcClient(bus.getJsonRpcUrl());
                         String subscriptionId = "";
                         try {
                             subscriptionId= client.subscribe();
@@ -222,7 +218,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
                         bus.setConnectionStatus(BusConnectionStatus.Synchronizing);
                         BusDao.saveBuses(entityManager, Collections.singletonList(bus));
 
-                        final AgoControlBusClient client = new AgoControlBusClient(bus.getJsonRpcUrl());
+                        final AgoControlBusRpcClient client = new AgoControlBusRpcClient(bus.getJsonRpcUrl());
 
                         boolean success;
                         try {
