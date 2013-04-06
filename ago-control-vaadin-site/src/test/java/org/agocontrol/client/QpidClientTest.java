@@ -26,7 +26,7 @@ import javax.naming.InitialContext;
 /**
  * Test class for resting ago control client.
  */
-public class AgoControlAmqpClientQpidTest {
+public class QpidClientTest {
     /** The properties category used in instantiating default services. */
     private static final String PROPERTIES_CATEGORY = "test";
     /** The persistence unit to be used. */

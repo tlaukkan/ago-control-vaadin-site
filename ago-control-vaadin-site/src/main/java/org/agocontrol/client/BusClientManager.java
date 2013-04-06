@@ -86,7 +86,7 @@ public class BusClientManager {
                         final BusClient client = clients.get(bus);
                         client.close();
                         bus.setConnectionStatus(BusConnectionStatus.Disconnected);
-                        BusDao.saveBuses(entityManagerFactory.createEntityManager(), Collections.singletonList(bus));
+                        BusDao.saveBuses(entityManager, Collections.singletonList(bus));
                     } catch (final Exception e) {
                         LOGGER.warn("Exception in bus client close.", e);
                     }
@@ -134,7 +134,7 @@ public class BusClientManager {
                 try {
                     client.close();
                     bus.setConnectionStatus(BusConnectionStatus.Disconnected);
-                    BusDao.saveBuses(entityManagerFactory.createEntityManager(), Collections.singletonList(bus));
+                    BusDao.saveBuses(entityManager, Collections.singletonList(bus));
                 } catch (final Exception e) {
                     LOGGER.warn("Exception in bus client close.", e);
                 }
@@ -146,11 +146,11 @@ public class BusClientManager {
                 try {
                     clients.put(bus, new BusClient(entityManagerFactory, bus));
                     bus.setConnectionStatus(BusConnectionStatus.Connected);
-                    BusDao.saveBuses(entityManagerFactory.createEntityManager(), Collections.singletonList(bus));
+                    BusDao.saveBuses(entityManager, Collections.singletonList(bus));
                 } catch (final Exception e) {
                     LOGGER.warn("Exception in bus client connect.", e);
                     bus.setConnectionStatus(BusConnectionStatus.Error);
-                    BusDao.saveBuses(entityManagerFactory.createEntityManager(), Collections.singletonList(bus));
+                    BusDao.saveBuses(entityManager, Collections.singletonList(bus));
                 }
             }
         }

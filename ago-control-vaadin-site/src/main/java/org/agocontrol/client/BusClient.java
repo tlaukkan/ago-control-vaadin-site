@@ -222,6 +222,7 @@ public class BusClient {
             }
         });
         inventoryRequestThread.start();
+        LOGGER.info("Connected to bus: " + bus.getName());
     }
 
 
@@ -240,6 +241,7 @@ public class BusClient {
         eventHandlerThread.join();
         connection.close();
         context.close();
+        LOGGER.info("Disconnected from bus: " + bus.getName());
     }
 
 
@@ -382,6 +384,13 @@ public class BusClient {
         }
 
         ElementDao.saveElements(entityManager, elements);
+
+        final Bus loadedBus = BusDao.getBus(entityManager, bus.getBusId());
+        if (loadedBus != null) {
+            loadedBus.setInventorySynchronized(new Date());
+            BusDao.saveBuses(entityManager, Collections.singletonList(loadedBus));
+            LOGGER.info("Synchronized inventory from bus: " + bus.getName());
+        }
 
         //return treeIndex;
     }

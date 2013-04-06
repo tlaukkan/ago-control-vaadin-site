@@ -20,6 +20,8 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinServletRequest;
 import org.agocontrol.client.AgoControlBusRpcClient;
+import org.agocontrol.client.BusClientManager;
+import org.agocontrol.client.EventProcessor;
 import org.agocontrol.dao.BusDao;
 import org.agocontrol.model.Bus;
 import org.agocontrol.model.BusConnectionStatus;
@@ -89,8 +91,6 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
     private static final String PROPERTIES_CATEGORY = "ago-control-vaadin-site";
     /** The persistence unit to be used. */
     public static final String PERSISTENCE_UNIT = "ago-control-vaadin-site";
-    /** The shutdown flag for signaling shutdown. */
-    private static boolean shutdownRequested = false;
 
     /**
      * Main method for running BareSiteUI.
@@ -115,8 +115,6 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         entityManagerFactory = Persistence.createEntityManagerFactory(
                 PERSISTENCE_UNIT, properties);
 
-
-
         final String webappUrl = AgoControlSiteUI.class.getClassLoader().getResource("webapp/").toExternalForm();
 
         final Server server = new Server(8082);
@@ -130,127 +128,30 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         server.setHandler(context);
         server.start();
 
-        final List<Thread> eventFetchThreads = new ArrayList<>();
-        final EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final List<Company> companies = CompanyDao.getCompanies(entityManager);
-        for (final Company company : companies) {
-
-            final List<Bus> buses = BusDao.getBuses(entityManager, company);
-            for (final Bus bus : buses) {
-
-                if (bus.getJsonRpcUrl() == null || bus.getJsonRpcUrl().length() ==0) {
-                    continue;
-                }
-
-                final Thread eventFetchThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        final EntityManager threadEntityManager = entityManagerFactory.createEntityManager();
-                        final Company threadCompany = threadEntityManager.getReference(Company.class,
-                                company.getCompanyId());
-
-                        final AgoControlBusRpcClient client = new AgoControlBusRpcClient(bus.getJsonRpcUrl());
-                        String subscriptionId = "";
-                        try {
-                            subscriptionId= client.subscribe();
-                        } catch (final Throwable t) {
-                            LOGGER.error("Error in in initial subscription to events..", t);
-                        }
-                        while (!shutdownRequested) {
-                            try {
-                                client.processEvents(threadEntityManager, threadCompany);
-
-                                final boolean subscriptionOk =
-                                    client.fetch(threadEntityManager, threadCompany, subscriptionId);
-
-                                if (!subscriptionOk) {
-                                    subscriptionId = client.subscribe();
-                                }
-
-                            } catch (final Throwable t) {
-                                LOGGER.error("Error in fetching events..", t);
-                                try {
-                                    Thread.sleep(10000);
-                                } catch (final InterruptedException e) {
-                                    break;
-                                }
-                            }
-                            try {
-                                Thread.sleep(200);
-                            } catch (final InterruptedException e) {
-                                LOGGER.debug("Event fetcher thread interrupted.", e);
-                                break;
-                            }
-                        }
-
-                        client.unsubscribe(subscriptionId);
-
-                    }
-                }, "Event fetcher: " + bus.getJsonRpcUrl());
-                eventFetchThread.start();
-                eventFetchThreads.add(eventFetchThread);
-            }
-        }
+        final BusClientManager busClientManager = new BusClientManager(entityManagerFactory);
+        final EventProcessor eventProcessor = new EventProcessor(entityManagerFactory);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                shutdownRequested = true;
-                mainThread.interrupt();
-                for (final Thread thread : eventFetchThreads) {
-                    thread.interrupt();
+                try {
+                    eventProcessor.close();
+                } catch (final Throwable t) {
+                    LOGGER.error("Error in event processor stop.", t);
+                }
+                try {
+                    busClientManager.close();
+                } catch (final Throwable t) {
+                    LOGGER.error("Error in bus client manager stop.", t);
+                }
+                    try {
+                    server.stop();
+                } catch (final Throwable t) {
+                    LOGGER.error("Error in jetty server stop.", t);
                 }
             }
         });
 
-        while (!shutdownRequested) {
-            try {
-                for (final Company company : companies) {
-
-                    final List<Bus> buses = BusDao.getBuses(entityManager, company);
-                    int treeIndex = 0;
-                    for (final Bus bus : buses) {
-
-                        if (bus.getJsonRpcUrl() == null || bus.getJsonRpcUrl().length() ==0) {
-                            continue;
-                        }
-
-                        bus.setConnectionStatus(BusConnectionStatus.Synchronizing);
-                        BusDao.saveBuses(entityManager, Collections.singletonList(bus));
-
-                        final AgoControlBusRpcClient client = new AgoControlBusRpcClient(bus.getJsonRpcUrl());
-
-                        boolean success;
-                        try {
-                            treeIndex = client.synchronizeInventory(entityManager, company, treeIndex);
-                            success = true;
-                        } catch (final Throwable t) {
-                            success = false;
-                            LOGGER.error("Failed to synchronize inventory to: " + bus.getJsonRpcUrl(), t);
-                        }
-
-                        entityManager.refresh(bus);
-                        if (success) {
-                            bus.setConnectionStatus(BusConnectionStatus.Connected);
-                            bus.setInventorySynchronized(new Date());
-                        } else {
-                            bus.setConnectionStatus(BusConnectionStatus.Error);
-                        }
-                        BusDao.saveBuses(entityManager, Collections.singletonList(bus));
-                    }
-                }
-            } catch (final Throwable t) {
-                LOGGER.error("Error in inventory synchronization.", t);
-            }
-            try {
-                Thread.sleep(5 * 60000);
-            } catch (final InterruptedException e) {
-                LOGGER.debug("Interrupt in inventory synchronization loop.", e);
-                break;
-            }
-        }
-
-        server.stop();
+        server.join();
     }
 
     @Override
