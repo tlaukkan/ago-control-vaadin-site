@@ -129,7 +129,6 @@ public class BuildingControlPanel extends AbstractViewlet {
         layout.setSpacing(true);
         layout.setMargin(true);
         layout.setStyleName(Reindeer.LAYOUT_WHITE);
-        layout.setSizeFull();
 
         final Label title = new Label("Control Panel");
         title.setIcon(getSite().getIcon("inventory"));

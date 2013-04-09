@@ -143,6 +143,23 @@ public final class RecordSetDao {
     }
 
     /**
+     * Gets given recordSets.
+     * @param entityManager the entity manager.
+     * @param parent the element
+     * @param type the record type
+     * @return the recordSet
+     */
+    public static List<RecordSet> getRecordSetsByParent(final EntityManager entityManager, final Element parent,
+                                                        final RecordType type) {
+        final TypedQuery<RecordSet> query = entityManager.createQuery(
+                "select e from RecordSet as e where e.element.parentId=:parentId and e.type=:type",
+                RecordSet.class);
+        query.setParameter("parentId", parent.getElementId());
+        query.setParameter("type", type);
+        return query.getResultList();
+    }
+
+    /**
      * Gets given recordSet.
      * @param entityManager the entity manager.
      * @param id the name of the recordSet

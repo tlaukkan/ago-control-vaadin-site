@@ -1,6 +1,10 @@
 package org.agocontrol.site.component.flot;
 
+import org.vaadin.addons.sitekit.grid.field.DatePartField;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -42,5 +46,14 @@ public class DataSet {
      */
     public final void setData(final List<List<Object>> data) {
         this.data = data;
+    }
+
+    /**
+     * Adds date value pair to data.
+     * @param date the date
+     * @param value the value
+     */
+    public final void addValue(final Date date, final Double value) {
+        data.add(Arrays.asList(new Object[] {date.getTime(), value}));
     }
 }
