@@ -16,6 +16,7 @@
 package org.agocontrol.site.viewlet.dashboard;
 
 import com.vaadin.data.Property;
+import com.vaadin.server.Resource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Label;
@@ -81,6 +82,23 @@ public class ChartPanel extends AbstractViewlet {
      */
     private String buildingId;
     private final ComboBox recordTypeComboBox;
+    /**
+     * The temperature icon.
+     */
+    private final Resource temperatureIcon;
+    /**
+     * The brightness icon.
+     */
+    private final Resource brightnessIcon;
+    /**
+     * The humidity icon.
+     */
+    private final Resource humidityIcon;
+    /**
+     * The event icon.
+     */
+    private final Resource eventIcon;
+    private final Label title;
 
 
     /**
@@ -91,13 +109,19 @@ public class ChartPanel extends AbstractViewlet {
         siteContext = site.getSiteContext();
         entityManager = siteContext.getObject(EntityManager.class);
 
+        temperatureIcon = site.getIcon("temperature");
+        brightnessIcon = site.getIcon("brightness");
+        humidityIcon = site.getIcon("humidity");
+        eventIcon = site.getIcon("event");
+
         layout = new VerticalLayout();
         layout.setSpacing(true);
         layout.setMargin(true);
         layout.setSizeFull();
         layout.setStyleName(Reindeer.LAYOUT_WHITE);
 
-        final Label title = new Label("Record Chart");
+        title = new Label("Record Chart");
+        title.setImmediate(true);
         title.setIcon(getSite().getIcon("folder"));
         title.setStyleName(Reindeer.LABEL_H2);
         layout.addComponent(title);
@@ -155,6 +179,25 @@ public class ChartPanel extends AbstractViewlet {
         final Element building = ElementDao.getElement(entityManager, buildingId);
 
         final RecordType recordType = (RecordType) recordTypeComboBox.getValue();
+
+        final Resource icon;
+        switch (recordType) {
+            case TEMPERATURE:
+                icon = temperatureIcon;
+                break;
+            case BRIGHTNESS:
+                icon = brightnessIcon;
+                break;
+            case HUMIDITY:
+                icon = humidityIcon;
+                break;
+            default:
+                icon = eventIcon;
+                break;
+        }
+        title.setIcon(icon);
+
+
         final List<RecordSet> recordSets = new ArrayList<RecordSet>();
 
         final List<Element> elements = ElementDao.getElements(entityManager, company);
@@ -210,7 +253,7 @@ public class ChartPanel extends AbstractViewlet {
             state.getDataSets().add(dataSet);
         }
 
-        flot.setHeight(200, Unit.PIXELS);
+        flot.setHeight(280, Unit.PIXELS);
         //setWidth(400, Unit.PIXELS);
         //setHeight(300, Unit.PIXELS);
         chartLayout.addComponent(flot);

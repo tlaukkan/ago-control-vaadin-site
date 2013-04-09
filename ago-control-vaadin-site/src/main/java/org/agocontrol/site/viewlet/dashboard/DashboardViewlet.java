@@ -95,8 +95,8 @@ public class DashboardViewlet extends AbstractViewlet {
 
         chartPanel = new ChartPanel();
         chartPanel.setSizeFull();
-        chartPanel.setWidth(450, Unit.PIXELS);
-        chartPanel.setHeight(350, Unit.PIXELS);
+        chartPanel.setWidth(700, Unit.PIXELS);
+        chartPanel.setHeight(400, Unit.PIXELS);
         gridLayout.addComponent(chartPanel, 1, 1);
 
         eventPanel = new EventPanel();
