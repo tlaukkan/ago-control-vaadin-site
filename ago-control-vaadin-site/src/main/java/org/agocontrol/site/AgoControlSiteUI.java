@@ -215,7 +215,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         }*/
 
         viewDescriptors.add(new ViewDescriptor("default", null, null, new ViewVersion(0, "master", "Default", "",
-                "This is default view.", FixedWidthView.class.getCanonicalName(), new String[]{"administrator", "user"},
+                "This is default view.", FixedWidthView.class.getCanonicalName(), new String[]{"anonymous"},
                 Arrays.asList(new ViewletDescriptor(
                         "content", "Dashboard Viewlet", "This is Dashboard viewlet.", null,
                         DashboardViewlet.class.getCanonicalName())

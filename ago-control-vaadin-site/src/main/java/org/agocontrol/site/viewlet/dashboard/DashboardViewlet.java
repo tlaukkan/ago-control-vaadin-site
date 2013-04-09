@@ -60,6 +60,7 @@ public class DashboardViewlet extends AbstractViewlet {
      * The event panel.
      */
     private final EventPanel eventPanel;
+    private final ChartPanel chartPanel;
 
     /**
      * Default constructor which constructs component hierarchy.
@@ -71,13 +72,14 @@ public class DashboardViewlet extends AbstractViewlet {
 
         final GridLayout gridLayout = new GridLayout();
         gridLayout.setSizeFull();
-        gridLayout.setRows(2);
+        gridLayout.setRows(3);
         gridLayout.setColumns(2);
         gridLayout.setSpacing(true);
-        gridLayout.setColumnExpandRatio(0, 0.5f);
-        gridLayout.setColumnExpandRatio(1, 0.5f);
+        gridLayout.setColumnExpandRatio(0, 1);
+        gridLayout.setColumnExpandRatio(1, 0);
         gridLayout.setRowExpandRatio(0, 0);
-        gridLayout.setRowExpandRatio(1, 1);
+        gridLayout.setRowExpandRatio(1, 0);
+        gridLayout.setRowExpandRatio(2, 1);
 
 
         buildingSelectPanel = new BuildingSelectPanel();
@@ -89,13 +91,19 @@ public class DashboardViewlet extends AbstractViewlet {
         //buildingControlPanel.setCaption("Control Panel");
         //buildingControlPanel.setHeight(200, Unit.PIXELS);
         buildingControlPanel.setSizeFull();
-        gridLayout.addComponent(buildingControlPanel, 0, 1);
+        gridLayout.addComponent(buildingControlPanel, 0, 1, 0, 2);
+
+        chartPanel = new ChartPanel();
+        chartPanel.setSizeFull();
+        chartPanel.setWidth(450, Unit.PIXELS);
+        chartPanel.setHeight(350, Unit.PIXELS);
+        gridLayout.addComponent(chartPanel, 1, 1);
 
         eventPanel = new EventPanel();
         //eventPanel.setCaption("Bus Events");
         //ventPanel.setHeight(200, Unit.PIXELS);
         eventPanel.setSizeFull();
-        gridLayout.addComponent(eventPanel, 1,1);
+        gridLayout.addComponent(eventPanel, 1, 2);
 
         setCompositionRoot(gridLayout);
     }
@@ -110,9 +118,9 @@ public class DashboardViewlet extends AbstractViewlet {
         } else {
             buildingSelectPanel.enter(parameters);
             buildingControlPanel.enter(parameters);
+            chartPanel.enter(parameters);
+            eventPanel.enter(parameters);
         }
-
-        eventPanel.enter(parameters);
     }
 
 }

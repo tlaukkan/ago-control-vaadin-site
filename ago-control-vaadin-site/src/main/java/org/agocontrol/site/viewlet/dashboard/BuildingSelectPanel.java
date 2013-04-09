@@ -21,6 +21,7 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Embedded;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -72,10 +73,6 @@ public class BuildingSelectPanel extends AbstractViewlet {
      */
     private final ComboBox buildingComboBox;
     /**
-     * The rooms layout.
-     */
-    private final VerticalLayout roomsLayout;
-    /**
      * The selected building id.
      */
     private String selectedBuildingId;
@@ -94,6 +91,13 @@ public class BuildingSelectPanel extends AbstractViewlet {
         layout.setSpacing(true);
         layout.setMargin(true);
         layout.setStyleName(Reindeer.LAYOUT_WHITE);
+
+        final Label title = new Label("Select Building");
+        //title.setIcon(getSite().getIcon("inventory"));
+        title.setStyleName(Reindeer.LABEL_H2);
+        layout.addComponent(title);
+        layout.setExpandRatio(title, 0);
+
 
         final HorizontalLayout titleLayout = new HorizontalLayout();
         layout.addComponent(titleLayout);
@@ -127,11 +131,6 @@ public class BuildingSelectPanel extends AbstractViewlet {
             }
         });
 
-        roomsLayout = new VerticalLayout();
-        layout.addComponent(roomsLayout);
-        roomsLayout.setSpacing(true);
-        roomsLayout.setSizeFull();
-
         setCompositionRoot(layout);
     }
 
@@ -144,13 +143,9 @@ public class BuildingSelectPanel extends AbstractViewlet {
         final Company company = siteContext.getObject(Company.class);
         if (company != null) {
             final List<Element> buildings = ElementDao.getElements(entityManager, company, ElementType.BUILDING);
-            /*if (selectedBuildingId.length() == 0 && buildings.size() > 0) {
-                UI.getCurrent().getNavigator().navigateTo("default/" + buildings.get(0).getElementId());
-            }*/
 
             buildingComboBox.setValue(null);
             buildingComboBox.removeAllItems();
-            roomsLayout.removeAllComponents();
             for (final Element building : buildings) {
                 buildingComboBox.addItem(building);
                 if (building.getElementId().equals(selectedBuildingId)) {

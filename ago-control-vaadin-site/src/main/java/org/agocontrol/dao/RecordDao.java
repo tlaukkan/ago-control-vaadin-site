@@ -122,7 +122,7 @@ public final class RecordDao {
      */
     public static List<Record> getRecords(final EntityManager entityManager, final RecordSet recordSet) {
         final TypedQuery<Record> query = entityManager.createQuery(
-                "select e from Record as e where e.recordSet=:recordSet order by e.created",
+                "select e from Record as e where e.recordSet=:recordSet order by e.created desc",
                 Record.class);
         query.setParameter("recordSet", recordSet);
         return query.getResultList();
