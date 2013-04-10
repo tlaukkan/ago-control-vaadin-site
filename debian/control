@@ -1,0 +1,14 @@
+Source: ago-control-vaadin-site
+Priority: extra
+Maintainer: Tommi S.E. Laukkanen <tommi.s.e.laukkanen@gmail.com>
+Build-Depends: debhelper (>= 7.0.50~), javahelper (>=0.25)
+Build-Depends-Indep: openjdk-7-jdk, maven2
+Standards-Version: 3.9.0
+Section: agocontrol
+
+Package: ago-control-vaadin-site
+Architecture: all
+Depends: ${java:Depends}, ${misc:Depends}
+Recommends: ${java:Recommends}
+Description: Ago control Vaadin site.
+ Ago control Vaadin site can be used to manage multiple ago control systems.

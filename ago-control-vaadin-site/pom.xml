@@ -75,6 +75,7 @@
                             <mainClass>org.agocontrol.site.AgoControlSiteUI</mainClass>
                         </manifest>
                     </archive>
+                    <finalName>ago-control-vaadin-site</finalName>
                 </configuration>
             </plugin>
 
