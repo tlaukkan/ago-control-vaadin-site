@@ -33,7 +33,7 @@ import org.agocontrol.site.viewlet.recordset.ElementField;
 import org.agocontrol.site.viewlet.recordset.RecordTypeField;
 import org.vaadin.addons.sitekit.grid.FieldDescriptor;
 import org.vaadin.addons.sitekit.grid.field.TimestampField;
-import org.vaadin.addons.sitekit.grid.formatter.BigDecimalFormatter;
+import org.vaadin.addons.sitekit.grid.formatter.DoubleFormatter;
 import org.vaadin.addons.sitekit.grid.formatter.TimestampFormatter;
 import org.vaadin.addons.sitekit.site.LocalizationProvider;
 
@@ -222,8 +222,8 @@ public final class AgoControlSiteFields {
                 null, false, true, true));
         AgoControlSiteFields.add(Record.class, new FieldDescriptor(
                 "value", "Value",
-                TextField.class, BigDecimalFormatter.class,
-                100, null, BigDecimalFormatter.class, "",
+                TextField.class, DoubleFormatter.class,
+                100, null, Double.class, "",
                 false, true, true));
 
         AgoControlSiteFields.add(RecordSet.class, new FieldDescriptor(

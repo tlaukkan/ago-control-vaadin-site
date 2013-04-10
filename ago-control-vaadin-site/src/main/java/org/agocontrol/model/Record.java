@@ -28,7 +28,6 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.Date;
 
 /**

@@ -32,7 +32,6 @@ import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
 
 import javax.persistence.EntityManager;
-import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;

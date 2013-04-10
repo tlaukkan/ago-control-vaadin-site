@@ -113,7 +113,7 @@
         <dependency>
             <groupId>org.vaadin.addons.sitekit</groupId>
             <artifactId>vaadin-sitekit</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.9</version>
         </dependency>
         <dependency>
             <groupId>hsqldb</groupId>
