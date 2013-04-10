@@ -213,7 +213,7 @@ public class AgoControlBusRpcClient {
                         RecordSetDao.saveRecordSets(entityManager, Collections.singletonList(recordSet));
                     }
 
-                    final BigDecimal value = new BigDecimal(valueString);
+                    final Double value = new Double(valueString);
 
                     RecordDao.saveRecords(entityManager, Collections.singletonList(new Record(
                         owner,

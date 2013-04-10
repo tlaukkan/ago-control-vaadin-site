@@ -54,7 +54,7 @@ public final class Record implements Serializable {
 
     /** Value. */
     @Column(nullable = false)
-    private BigDecimal value;
+    private double value;
 
     /** The record set. */
     @JoinColumn(nullable = false)
@@ -85,7 +85,7 @@ public final class Record implements Serializable {
      * @param created the create time stamp
      */
     public Record(final Company owner, final RecordSet recordSet,
-                  final BigDecimal value, final Date created) {
+                  final double value, final Date created) {
         this.owner = owner;
         this.recordSet = recordSet;
         this.value = value;
@@ -138,14 +138,14 @@ public final class Record implements Serializable {
     /**
      * @return the value
      */
-    public BigDecimal getValue() {
+    public double getValue() {
         return value;
     }
 
     /**
      * @param value the value to set
      */
-    public void setValue(final BigDecimal value) {
+    public void setValue(final double value) {
         this.value = value;
     }
 

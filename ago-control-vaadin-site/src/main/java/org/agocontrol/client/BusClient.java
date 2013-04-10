@@ -65,7 +65,7 @@ public class BusClient {
     /** The logger. */
     private static final Logger LOGGER = Logger.getLogger(BusClient.class);
     /** Default bus name. */
-    private static final String DEFAULT = "";
+    private static final String DEFAULT = "Default";
     /**
      * The entityManagerFactory.
      */
@@ -303,7 +303,7 @@ public class BusClient {
                 if (nameBuildingMap.containsKey(roomLocation)) {
                     building = nameBuildingMap.get(roomLocation);
                 } else {
-                    building = new Element(owner, ElementType.BUILDING, DEFAULT, "");
+                    building = nameBuildingMap.get(DEFAULT);
                     nameBuildingMap.put(DEFAULT, building);
                     elements.add(building);
                     idElementMap.put(building.getElementId(), building);

@@ -35,6 +35,7 @@ import org.agocontrol.site.AgoControlSiteUI;
 import org.agocontrol.site.component.flot.DataSet;
 import org.agocontrol.site.component.flot.Flot;
 import org.agocontrol.site.component.flot.FlotState;
+import org.agocontrol.util.DisplayValueConversionUtil;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
 import org.vaadin.addons.sitekit.site.AbstractViewlet;
@@ -232,9 +233,12 @@ public class ChartPanel extends AbstractViewlet {
 
         final Flot flot = new Flot();
 
+        final String recordUnit = recordSets.get(0).getUnit();
+        final String displayUnit = DisplayValueConversionUtil.getDisplayUnit(recordSets.get(0).getType(), recordUnit);
+
         final FlotState state = flot.getState();
         state.getOptions("options").put("HtmlText", false);
-        state.getOptions("options").put("title", recordType.toString() + "[" + recordSets.get(0).getUnit() + "]");
+        state.getOptions("options").put("title", recordType.toString() + "[" + displayUnit + "]");
         state.getOptions("selection").put("mode", "x");
         state.getOptions("xaxis").put("mode", "time");
         state.getOptions("xaxis").put("labelsAngle", Double.valueOf(45));
@@ -247,7 +251,9 @@ public class ChartPanel extends AbstractViewlet {
 
             final List<Record> records = RecordDao.getRecords(entityManager, recordSet);
             for (final Record record : records) {
-                dataSet.addValue(record.getCreated(), record.getValue().doubleValue());
+                final double displayValue = DisplayValueConversionUtil.convertValue(recordSet.getType(), recordUnit,
+                        displayUnit, record.getValue());
+                        dataSet.addValue(record.getCreated(), displayValue);
             }
 
             state.getDataSets().add(dataSet);

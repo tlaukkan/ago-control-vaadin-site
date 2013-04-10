@@ -32,6 +32,7 @@ import org.agocontrol.model.Element;
 import org.agocontrol.model.Record;
 import org.agocontrol.model.RecordSet;
 import org.agocontrol.site.AgoControlSiteUI;
+import org.agocontrol.util.DisplayValueConversionUtil;
 import org.apache.log4j.Logger;
 import org.vaadin.addons.sitekit.model.Company;
 import org.vaadin.addons.sitekit.site.AbstractViewlet;
@@ -204,7 +205,19 @@ public class BuildingControlPanel extends AbstractViewlet {
                         final Label label = new Label();
                         recordLayout.addComponent(label);
                         recordLayout.setComponentAlignment(label, Alignment.MIDDLE_LEFT);
-                        label.setValue(record.getValue().toString() + " " + recordSet.getUnit());
+
+                        final String recordUnit = recordSet.getUnit();
+                        final String displayUnit = DisplayValueConversionUtil.getDisplayUnit(recordSet.getType(),
+                                recordUnit);
+
+                        final double displayValue = DisplayValueConversionUtil.convertValue(recordSet.getType(),
+                                recordUnit,
+                                displayUnit, record.getValue());
+
+
+                        final String displayValueString = DisplayValueConversionUtil.formatDouble(displayValue);
+
+                        label.setValue(displayValueString + " " + displayUnit);
                         label.setDescription(record.getCreated().toString());
 
                         recordsLayout.addComponent(recordLayout, columnIndex, rowIndex);
