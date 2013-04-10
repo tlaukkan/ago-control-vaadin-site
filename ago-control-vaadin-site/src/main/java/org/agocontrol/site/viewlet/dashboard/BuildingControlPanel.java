@@ -317,7 +317,7 @@ public class BuildingControlPanel extends AbstractViewlet {
                         final List<RecordSet> recordSets = RecordSetDao.getRecordSets(threadEntityManager, element);
                         if (recordsLayouts.containsKey(element.getElementId())) {
                             for (final RecordSet recordSet : recordSets) {
-                                recordsQueue.put(RecordDao.getRecords(threadEntityManager, recordSet));
+                                recordsQueue.put(RecordDao.getRecords(threadEntityManager, recordSet, 1));
                                 if (recordReaderExitRequested) {
                                     break;
                                 }

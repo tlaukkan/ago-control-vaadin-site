@@ -128,6 +128,39 @@ public final class RecordDao {
         return query.getResultList();
     }
 
+    /**
+     * Gets given records.
+     * @param entityManager the entity manager.
+     * @param recordSet the record set
+     * @param since the since after which records are to be included
+     * @return list of records.
+     */
+    public static List<Record> getRecords(final EntityManager entityManager, final RecordSet recordSet,
+                                          final Date since) {
+        final TypedQuery<Record> query = entityManager.createQuery(
+                "select e from Record as e where e.recordSet=:recordSet and e.created>=:since order by e.created desc",
+                Record.class);
+        query.setParameter("recordSet", recordSet);
+        query.setParameter("since", since);
+        return query.getResultList();
+    }
+
+    /**
+     * Gets given records.
+     * @param entityManager the entity manager.
+     * @param recordSet the record set
+     * @param maxResults max result sizle
+     * @return list of records.
+     */
+    public static List<Record> getRecords(final EntityManager entityManager, final RecordSet recordSet,
+                                          final int maxResults) {
+        final TypedQuery<Record> query = entityManager.createQuery(
+                "select e from Record as e where e.recordSet=:recordSet order by e.created desc",
+                Record.class);
+        query.setParameter("recordSet", recordSet);
+        query.setMaxResults(maxResults);
+        return query.getResultList();
+    }
 
     /**
      * Gets given record.

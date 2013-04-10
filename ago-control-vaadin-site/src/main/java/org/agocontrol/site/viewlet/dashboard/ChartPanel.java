@@ -45,6 +45,7 @@ import sun.security.util.UntrustedCertificates;
 
 import javax.persistence.EntityManager;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -243,13 +244,14 @@ public class ChartPanel extends AbstractViewlet {
         state.getOptions("xaxis").put("mode", "time");
         state.getOptions("xaxis").put("labelsAngle", Double.valueOf(45));
 
+        final Date since = new Date(System.currentTimeMillis() - 7L * 24L * 60L * 60L * 1000L);
         for (final RecordSet recordSet : recordSets) {
             final DataSet dataSet = new DataSet();
             final Element element = recordSet.getElement();
             final Element parentElement = elementMap.get(element.getParentId());
             dataSet.setLabel(parentElement.getName() + " / " + element.getName());
 
-            final List<Record> records = RecordDao.getRecords(entityManager, recordSet);
+            final List<Record> records = RecordDao.getRecords(entityManager, recordSet, since);
             for (final Record record : records) {
                 final double displayValue = DisplayValueConversionUtil.convertValue(recordSet.getType(), recordUnit,
                         displayUnit, record.getValue());

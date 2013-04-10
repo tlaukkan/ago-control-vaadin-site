@@ -142,6 +142,8 @@ public final class RecordSetDao {
         return query.getResultList();
     }
 
+
+
     /**
      * Gets given recordSets.
      * @param entityManager the entity manager.
