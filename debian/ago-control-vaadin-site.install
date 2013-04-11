@@ -1,1 +1,5 @@
-ago-control-vaadin-site/target/ago-control-vaadin-site.jar opt/agocontrol/java
+ago-control-vaadin-site/target/ago-control-vaadin-site.jar opt/agocontrol/site
+ago-control-vaadin-site/target/lib/*.jar opt/agocontrol/site/lib
+ago-control-vaadin-site/conf/log4j.xml opt/agocontrol/site
+ago-control-vaadin-site/conf/ago-control-vaadin-site-ext.properties opt/agocontrol/site
+ago-control-vaadin-site/database/*.sql opt/agocontrol/site/database
