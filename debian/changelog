@@ -1,6 +1,6 @@
 ago-control-vaadin-site (1.0.0) unstable; urgency=low
 
-  * Initial Debian Upload (Closes: #NNNNNN)
+  * First version.
 
  -- Tommi S.E. Laukkanen <tommi.s.e.laukkanen@gmail.com>  Wed, 10 Apr 2013 12:25:00 +0000
 
