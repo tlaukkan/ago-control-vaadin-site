@@ -52,6 +52,7 @@ import org.vaadin.addons.sitekit.site.SiteMode;
 import org.vaadin.addons.sitekit.site.ViewDescriptor;
 import org.vaadin.addons.sitekit.site.ViewVersion;
 import org.vaadin.addons.sitekit.site.ViewletDescriptor;
+import org.vaadin.addons.sitekit.util.PersistenceUtil;
 import org.vaadin.addons.sitekit.util.PropertiesUtil;
 import org.vaadin.addons.sitekit.viewlet.administrator.company.CompanyFlowViewlet;
 import org.vaadin.addons.sitekit.viewlet.administrator.customer.CustomerFlowViewlet;
@@ -101,7 +102,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         final Thread mainThread = Thread.currentThread();
         DOMConfigurator.configure("./log4j.xml");
 
-        final Map properties = new HashMap();
+        /*final Map properties = new HashMap();
         properties.put(PersistenceUnitProperties.JDBC_DRIVER, PropertiesUtil.getProperty(
                 PROPERTIES_CATEGORY, PersistenceUnitProperties.JDBC_DRIVER));
         properties.put(PersistenceUnitProperties.JDBC_URL, PropertiesUtil.getProperty(
@@ -113,7 +114,9 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         properties.put(PersistenceUnitProperties.DDL_GENERATION, PropertiesUtil.getProperty(
                 PROPERTIES_CATEGORY, PersistenceUnitProperties.DDL_GENERATION));
         entityManagerFactory = Persistence.createEntityManagerFactory(
-                PERSISTENCE_UNIT, properties);
+                PERSISTENCE_UNIT, properties);*/
+
+        entityManagerFactory = PersistenceUtil.getEntityManagerFactory(PERSISTENCE_UNIT, PROPERTIES_CATEGORY);
 
         final String webappUrl = AgoControlSiteUI.class.getClassLoader().getResource("webapp/").toExternalForm();
 

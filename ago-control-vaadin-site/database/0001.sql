@@ -331,3 +331,18 @@ INSERT INTO groupmember VALUES ('50413BBB-DB86-402E-9E98-C7E73F219827', '2013-03
 INSERT INTO postaladdress VALUES ('CFE997C0-3FAF-4F6C-BBED-DB09689936B6', '-', '-', '00000', '-', 'Helsinki', 'Finland');
 INSERT INTO postaladdress VALUES ('4EA7E643-3C80-49B2-8D1C-AAFA7E66A28C', '-', '-', '00000', '-', 'Helsinki', 'Finland');
 INSERT INTO bus VALUES ('C9236CCE-EE45-4FBB-BB3C-6CB495755677', '2013-04-03 10:05:21.788', '2013-04-10 22:49:37.921', 'Local Bus', '3248528E-4D90-41F7-968F-AF255AD16901', 1, '2013-04-10 22:49:37.921', 'localhost', 5672, 'agocontrol', 'letmein');
+
+CREATE TABLE schemaversion
+(
+  created timestamp without time zone NOT NULL,
+  schemaname character varying(255) NOT NULL,
+  schemaversion character varying(255) NOT NULL,
+  CONSTRAINT schemaversion_pkey PRIMARY KEY (created )
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE schemaversion
+  OWNER TO agosite;
+
+INSERT INTO schemaversion VALUES (NOW(), 'agosite', '0001');

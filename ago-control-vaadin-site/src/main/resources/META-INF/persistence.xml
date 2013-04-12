@@ -9,6 +9,7 @@
 		<class>org.vaadin.addons.sitekit.model.Group</class>
 		<class>org.vaadin.addons.sitekit.model.GroupMember</class>
 		<class>org.vaadin.addons.sitekit.model.Privilege</class>
+        <class>org.vaadin.addons.sitekit.model.SchemaVersion</class>
 
         <class>org.agocontrol.model.Bus</class>
         <class>org.agocontrol.model.Element</class>
