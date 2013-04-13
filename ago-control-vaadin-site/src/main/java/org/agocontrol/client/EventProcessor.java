@@ -103,9 +103,14 @@ public class EventProcessor {
                         for (final Company company : companies) {
                             processEvent(entityManager, company);
                         }
-                        Thread.sleep(100);
+
                     } catch (final Throwable t) {
                         LOGGER.error("Error in processing events.", t);
+                    }
+                    try {
+                        Thread.sleep(100);
+                    } catch (final InterruptedException e) {
+                        LOGGER.debug("Processing events sleep interrupted.");
                     }
                 }
                 entityManager.close();

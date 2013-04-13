@@ -1,0 +1,2 @@
+/opt/agocontrol/site/agosite_schema_update.sh
+sudo systemctl start agosite.service

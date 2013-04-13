@@ -240,7 +240,7 @@ public class BuildingControlPanel extends AbstractViewlet {
             try {
                 recordReaderThread.join();
             } catch (final InterruptedException e) {
-                LOGGER.warn("Record reader thread death wait interrupted.");
+                LOGGER.debug("Record reader thread death wait interrupted.");
             }
         }
         elementLayout.removeAllComponents();

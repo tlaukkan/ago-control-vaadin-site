@@ -219,7 +219,7 @@ public class BusClient {
                     try {
                         Thread.sleep(5 * 60 * 1000);
                     } catch (final Throwable t) {
-                        LOGGER.warn("Interrupted inventory request message send wait.", t);
+                        LOGGER.debug("Interrupted inventory request message send wait.");
                     }
                 }
                 entityManager.close();
@@ -272,6 +272,9 @@ public class BusClient {
      */
     private void handleReply(final EntityManager entityManager, final Company owner) throws Exception  {
         final MapMessage message = (MapMessage) replyConsumer.receive();
+        if (message == null) {
+            return;
+        }
         final Map<String, Object> result = convertMapMessageToMap(message);
 
         final List<Element> elements = new ArrayList<>(ElementDao.getElements(entityManager, owner));
@@ -408,6 +411,10 @@ public class BusClient {
      */
     private void handleEvent(final EntityManager entityManager, final Company owner) throws Exception  {
         final MapMessage message = (MapMessage) messageConsumer.receive();
+
+        if (message == null) {
+            return;
+        }
 
         final String subject = message.getStringProperty("qpid.subject");
         if (subject == null || !subject.startsWith("event")) {

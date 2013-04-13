@@ -77,7 +77,7 @@ public class BusClientManager {
                     try {
                         Thread.sleep(30000);
                     } catch (final InterruptedException t) {
-                        LOGGER.warn("Interrupt in manager thread sleep.", t);
+                        LOGGER.debug("Interrupt in manager thread sleep.");
                     }
                 }
 
@@ -109,7 +109,7 @@ public class BusClientManager {
         try {
             managerThread.join();
         } catch (InterruptedException e) {
-            LOGGER.warn("BusClientManager close wait interrupted.", e);
+            LOGGER.debug("BusClientManager close wait interrupted.");
         }
     }
 
