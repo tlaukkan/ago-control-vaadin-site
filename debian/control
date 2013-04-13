@@ -8,7 +8,7 @@ Section: misc
 
 Package: ago-control-vaadin-site
 Architecture: all
-Depends: ${java:Depends}, ${misc:Depends}
+Depends: ${java:Depends}, ${misc:Depends}, postgresql, agocontrol
 Recommends: ${java:Recommends}
 Description: Ago control Vaadin site.
  Ago control Vaadin site can be used to manage multiple ago control systems.

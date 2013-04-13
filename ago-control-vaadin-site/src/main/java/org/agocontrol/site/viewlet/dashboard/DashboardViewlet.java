@@ -60,6 +60,9 @@ public class DashboardViewlet extends AbstractViewlet {
      * The event panel.
      */
     private final EventPanel eventPanel;
+    /**
+     * The chart panel.
+     */
     private final ChartPanel chartPanel;
 
     /**

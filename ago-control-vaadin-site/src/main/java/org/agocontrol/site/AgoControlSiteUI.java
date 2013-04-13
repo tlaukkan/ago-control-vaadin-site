@@ -19,12 +19,8 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinServletRequest;
-import org.agocontrol.client.AgoControlBusRpcClient;
 import org.agocontrol.client.BusClientManager;
 import org.agocontrol.client.EventProcessor;
-import org.agocontrol.dao.BusDao;
-import org.agocontrol.model.Bus;
-import org.agocontrol.model.BusConnectionStatus;
 import org.agocontrol.site.viewlet.bus.BusFlowViewlet;
 import org.agocontrol.site.viewlet.dashboard.DashboardViewlet;
 import org.agocontrol.site.viewlet.element.ElementFlowViewlet;
@@ -34,7 +30,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.vaadin.addons.sitekit.dao.CompanyDao;
 import org.vaadin.addons.sitekit.model.Company;
 import org.vaadin.addons.sitekit.site.AbstractSiteUI;
@@ -68,14 +63,9 @@ import org.vaadin.addons.sitekit.web.BareSiteFields;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * BareSite UI.
