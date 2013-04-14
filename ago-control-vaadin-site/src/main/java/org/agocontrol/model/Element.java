@@ -22,6 +22,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -52,8 +53,9 @@ public final class Element implements Serializable, Comparable<Element> {
     private Bus bus;
 
     /** Parent ID of the parent entity or own id if root. */
-    @Column(nullable = false)
-    private String parentId;
+    @JoinColumn(nullable = true)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Element parent;
 
     /** Owning company. */
     @JoinColumn(nullable = false)
@@ -96,7 +98,7 @@ public final class Element implements Serializable, Comparable<Element> {
      */
     public Element() {
         this.elementId = UUID.randomUUID().toString().toUpperCase();
-        this.parentId = elementId;
+        this.parent = null;
         this.created = new Date();
         this.modified = this.created;
     }
@@ -111,7 +113,7 @@ public final class Element implements Serializable, Comparable<Element> {
     public Element(final Company owner, final ElementType type, final String name, final String category) {
         this.created = new Date();
         this.elementId = UUID.randomUUID().toString().toUpperCase();
-        this.parentId = elementId;
+        this.parent = null;
         this.owner = owner;
         this.type = type;
         this.name = name;
@@ -120,17 +122,17 @@ public final class Element implements Serializable, Comparable<Element> {
 
     /**
      * @param elementId the elementId
-     * @param parentId the parentId
+     * @param parent the parent
      * @param owner the owner
      * @param type the type
      * @param name the name
      * @param category the category
      */
-    public Element(final String elementId, final String parentId, final Company owner, final ElementType type,
+    public Element(final String elementId, final Element parent, final Company owner, final ElementType type,
                    final String name, final String category) {
         this.created = new Date();
         this.elementId = elementId;
-        this.parentId = parentId;
+        this.parent = parent;
         this.owner = owner;
         this.type = type;
         this.name = name;
@@ -138,21 +140,35 @@ public final class Element implements Serializable, Comparable<Element> {
     }
 
     /**
-     * @param parentId the elementId
+     * @param parent the elementId
      * @param owner the owner
      * @param type the type
      * @param name the name
      * @param category the category
      */
-    public Element(final String parentId, final Company owner, final ElementType type,
+    public Element(final Element parent, final Company owner, final ElementType type,
                    final String name, final String category) {
         this.created = new Date();
         this.elementId = UUID.randomUUID().toString().toUpperCase();
-        this.parentId = parentId;
+        this.parent = parent;
         this.owner = owner;
         this.type = type;
         this.name = name;
         this.category = category;
+    }
+
+    /**
+     * @return the parent
+     */
+    public Element getParent() {
+        return parent;
+    }
+
+    /**
+     * @param parent the parent
+     */
+    public void setParent(final Element parent) {
+        this.parent = parent;
     }
 
     /**
@@ -181,20 +197,6 @@ public final class Element implements Serializable, Comparable<Element> {
      */
     public void setBus(final Bus bus) {
         this.bus = bus;
-    }
-
-    /**
-     * @return the parentId
-     */
-    public String getParentId() {
-        return parentId;
-    }
-
-    /**
-     * @param parentId the parentId to set
-     */
-    public void setParentId(final String parentId) {
-        this.parentId = parentId;
     }
 
     /**
@@ -311,7 +313,7 @@ public final class Element implements Serializable, Comparable<Element> {
 
     @Override
     public String toString() {
-        return name;
+        return "[" + type.toString().substring(0, 1) + "] " + name;
     }
 
     @Override

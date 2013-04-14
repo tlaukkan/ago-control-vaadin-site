@@ -248,7 +248,7 @@ public class ChartPanel extends AbstractViewlet {
         for (final RecordSet recordSet : recordSets) {
             final DataSet dataSet = new DataSet();
             final Element element = recordSet.getElement();
-            final Element parentElement = elementMap.get(element.getParentId());
+            final Element parentElement = elementMap.get(element.getParent().getElementId());
             dataSet.setLabel(parentElement.getName() + " / " + element.getName());
 
             final List<Record> records = RecordDao.getRecords(entityManager, recordSet, since);

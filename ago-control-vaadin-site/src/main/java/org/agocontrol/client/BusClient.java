@@ -59,6 +59,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -136,7 +137,7 @@ public class BusClient {
     /**
      * Reply message queue.
      */
-    private final BlockingQueue<Message> replyMessageQueue = new SynchronousQueue<>();
+    private final BlockingQueue<Message> replyMessageQueue = new LinkedBlockingQueue<>(10);
 
     /**
      * Constructor which sets entityManagerFactory.
@@ -260,6 +261,24 @@ public class BusClient {
     }
 
     /**
+     * Synchronizes inventory.
+     * @return true if inventory synchronization succeeded.
+     */
+    public final boolean synchronizeInventory() {
+        final EntityManager entityManager = entityManagerFactory.createEntityManager();
+        final Company company = entityManager.getReference(Company.class, bus.getOwner().getCompanyId());
+        try {
+            requestInventory(entityManager, company);
+            return true;
+        } catch (final Throwable t) {
+            LOGGER.error("Error in inventory synchronization.", t);
+            return false;
+        } finally {
+            entityManager.close();
+        }
+    }
+
+    /**
      * Save element.
      * @param element the element
      * @return true if element save was success.
@@ -274,7 +293,28 @@ public class BusClient {
                     commandMessage.setString("uuid", element.getElementId());
                     commandMessage.setString("name", element.getName());
                     final Message replyMessage = sendCommand(commandMessage);
-                    LOGGER.error("Room save response message: " + replyMessage.toString());
+                    LOGGER.error("Room set name response message: " + replyMessage.toString());
+                    break;
+                }
+                case DEVICE: {
+                    {
+                        final MapMessage commandMessage = createMapMessage();
+                        commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+                        commandMessage.setString("command", "setdevicename");
+                        commandMessage.setString("uuid", element.getElementId());
+                        commandMessage.setString("name", element.getName());
+                        final Message replyMessage = sendCommand(commandMessage);
+                        LOGGER.error("Device set name response message: " + replyMessage.toString());
+                    }
+                    if (element.getParent() != null && element.getParent().getType() == ElementType.ROOM) {
+                        final MapMessage commandMessage = createMapMessage();
+                        commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+                        commandMessage.setString("command", "setdeviceroom");
+                        commandMessage.setString("uuid", element.getElementId());
+                        commandMessage.setString("room", element.getParent().getElementId());
+                        final Message replyMessage = sendCommand(commandMessage);
+                        LOGGER.error("Set device room response message: " + replyMessage.toString());
+                    }
                     break;
                 }
                 default:
@@ -345,15 +385,23 @@ public class BusClient {
     public final Message sendCommand(final MapMessage commandMessage) {
         synchronized (messageProducer) {
             try {
+                replyMessageQueue.clear(); // clear reply queue to remove any unprocessed responses.
+
                 commandMessage.setJMSReplyTo(replyQueue);
                 messageProducer.send(commandMessage);
-                final Message replyMessage = replyMessageQueue.poll(5, TimeUnit.SECONDS);
 
+                final Message replyMessage = replyMessageQueue.poll(5, TimeUnit.SECONDS);
                 if (replyMessage == null) {
                     throw new TimeoutException("Timeout in command processing.");
                 }
 
-                return replyMessage;
+                final Message replyMessageTwo = replyMessageQueue.poll(300, TimeUnit.MILLISECONDS);
+
+                if (replyMessageTwo != null) {
+                    LOGGER.debug("Received two commands responses.");
+                }
+
+                return replyMessageTwo != null ? replyMessageTwo : replyMessage;
             } catch (Exception e) {
                 throw new RuntimeException("Error in command message sending.", e);
             }
@@ -380,141 +428,153 @@ public class BusClient {
      * @throws Exception exception occurs in inventory request message sending.
      */
     private void requestInventory(final EntityManager entityManager, final Company owner) throws Exception {
-        final MapMessage commandMessage = session.createMapMessage();
-        commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
-        commandMessage.setString("command", "inventory");
+        synchronized (this) {
+            final MapMessage commandMessage = session.createMapMessage();
+            commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+            commandMessage.setString("command", "inventory");
 
-        final MapMessage message = (MapMessage) sendCommand(commandMessage);
+            final Message message = sendCommand(commandMessage);
 
-        final Map<String, Object> result = convertMapMessageToMap(message);
-
-        final List<Element> elements = new ArrayList<>(ElementDao.getElements(entityManager, owner));
-        final Map<String, Element> idElementMap = new HashMap<>();
-        final Map<String, Element> nameBuildingMap = new HashMap<>();
-
-        for (final Element element : elements) {
-            if (element.getType() == ElementType.BUILDING) {
-                nameBuildingMap.put(element.getName(), element);
-            }
-            idElementMap.put(element.getElementId(), element);
-        }
-
-        if (!nameBuildingMap.containsKey(DEFAULT)) {
-            final Element building = new Element(owner, ElementType.BUILDING, DEFAULT, "");
-            nameBuildingMap.put(building.getName(), building);
-            idElementMap.put(building.getElementId(), building);
-            elements.add(building);
-        }
-
-        if (result.containsKey("rooms")) {
-            final Map<String, Object> rooms = (Map) result.get("rooms");
-            for (final String roomId : ((Map<String, Object>) result.get("rooms")).keySet()) {
-                final Map<String, Object> roomMessage = (Map) rooms.get(roomId);
-                final String roomName = (String) roomMessage.get("name");
-                final String roomLocation = (String) roomMessage.get("location");
-
-                final Element building;
-                if (nameBuildingMap.containsKey(roomLocation)) {
-                    building = nameBuildingMap.get(roomLocation);
-                } else {
-                    building = nameBuildingMap.get(DEFAULT);
-                    nameBuildingMap.put(DEFAULT, building);
-                    elements.add(building);
-                    idElementMap.put(building.getElementId(), building);
-                }
-
-                final Element room;
-                if (idElementMap.containsKey(roomId)) {
-                    room = idElementMap.get(roomId);
-                    room.setBus(bus);
-                    room.setParentId(building.getElementId());
-                    room.setName(roomName);
-                } else {
-                    room = new Element(roomId, building.getElementId(), owner, ElementType.ROOM, roomName, "");
-                    room.setBus(bus);
-                    elements.add(room);
-                    idElementMap.put(room.getElementId(), room);
-                }
-            }
-        }
-
-        if (result.containsKey("inventory")) {
-            final Map<String, Object> inventory = (Map) result.get("inventory");
-            for (final String elementId : ((Map<String, Object>) result.get("inventory")).keySet()) {
-                final Map<String, Object> elementMessage = (Map) inventory.get(elementId);
-                if (elementMessage == null) {
-                    continue;
-                }
-                final String name = (String) elementMessage.get("name");
-                final String roomId = (String) elementMessage.get("room");
-                final String category = (String) elementMessage.get("devicetype");
-
-                final Element parent;
-                if (idElementMap.containsKey(roomId)) {
-                    parent = idElementMap.get(roomId);
-                } else {
-                    parent =  nameBuildingMap.get(DEFAULT);
-                }
-
-                final Element element;
-                if (idElementMap.containsKey(elementId)) {
-                    element = idElementMap.get(elementId);
-                    element.setBus(bus);
-                    element.setParentId(parent.getElementId());
-                    element.setName(name);
-                    element.setCategory(category);
-                    element.setType(ElementType.DEVICE);
-                } else {
-                    element = new Element(elementId, parent.getElementId(), owner, ElementType.DEVICE, name, category);
-                    element.setBus(bus);
-                    elements.add(element);
-                    idElementMap.put(element.getElementId(), element);
-                }
-            }
-        }
-
-        final List<Element> roots = new ArrayList<>();
-        final Map<Element, Set<Element>> treeMap = new HashMap<>();
-
-        for (final Element element : elements) {
-            if (element.getElementId().equals(element.getParentId())) {
-                element.setTreeDepth(0);
-                roots.add(element);
+            final MapMessage mapMessage;
+            if (message instanceof MapMessage) {
+                mapMessage = (MapMessage) message;
             } else {
-                final Element parent = idElementMap.get(element.getParentId());
-                if (parent != null) {
-                    if (!treeMap.containsKey(parent)) {
-                        treeMap.put(parent, new TreeSet<Element>());
+                LOGGER.warn("Inventory request response was not map message." +
+                        "Trying to read reply message queue once more");
+                mapMessage = (MapMessage) replyMessageQueue.poll(5, TimeUnit.SECONDS);
+            }
+
+            final Map<String, Object> result = convertMapMessageToMap(mapMessage);
+
+            final List<Element> elements = new ArrayList<>(ElementDao.getElements(entityManager, owner));
+            final Map<String, Element> idElementMap = new HashMap<>();
+            final Map<String, Element> nameBuildingMap = new HashMap<>();
+
+            for (final Element element : elements) {
+                if (element.getType() == ElementType.BUILDING) {
+                    nameBuildingMap.put(element.getName(), element);
+                }
+                idElementMap.put(element.getElementId(), element);
+            }
+
+            if (!nameBuildingMap.containsKey(DEFAULT)) {
+                final Element building = new Element(owner, ElementType.BUILDING, DEFAULT, "");
+                nameBuildingMap.put(building.getName(), building);
+                idElementMap.put(building.getElementId(), building);
+                elements.add(building);
+            }
+
+            if (result.containsKey("rooms")) {
+                final Map<String, Object> rooms = (Map) result.get("rooms");
+                for (final String roomId : ((Map<String, Object>) result.get("rooms")).keySet()) {
+                    final Map<String, Object> roomMessage = (Map) rooms.get(roomId);
+                    final String roomName = (String) roomMessage.get("name");
+                    final String roomLocation = (String) roomMessage.get("location");
+
+                    final Element building;
+                    if (nameBuildingMap.containsKey(roomLocation)) {
+                        building = nameBuildingMap.get(roomLocation);
+                    } else {
+                        building = nameBuildingMap.get(DEFAULT);
+                        nameBuildingMap.put(DEFAULT, building);
+                        elements.add(building);
+                        idElementMap.put(building.getElementId(), building);
                     }
-                    treeMap.get(parent).add(element);
+
+                    final Element room;
+                    if (idElementMap.containsKey(roomId)) {
+                        room = idElementMap.get(roomId);
+                        room.setBus(bus);
+                        room.setParent(building);
+                        room.setName(roomName);
+                    } else {
+                        room = new Element(roomId, building, owner, ElementType.ROOM, roomName, "");
+                        room.setBus(bus);
+                        elements.add(room);
+                        idElementMap.put(room.getElementId(), room);
+                    }
                 }
             }
-        }
 
-        final LinkedList<Element> elementsToIterate = new LinkedList<Element>();
-        elementsToIterate.addAll(roots);
+            if (result.containsKey("inventory")) {
+                final Map<String, Object> inventory = (Map) result.get("inventory");
+                for (final String elementId : ((Map<String, Object>) result.get("inventory")).keySet()) {
+                    final Map<String, Object> elementMessage = (Map) inventory.get(elementId);
+                    if (elementMessage == null) {
+                        continue;
+                    }
+                    final String name = (String) elementMessage.get("name");
+                    final String roomId = (String) elementMessage.get("room");
+                    final String category = (String) elementMessage.get("devicetype");
 
-        int startTreeIndex = bus.getBusId().hashCode();
-        int treeIndex = startTreeIndex;
-        while (elementsToIterate.size() > 0) {
-            final Element element = elementsToIterate.removeFirst();
-            element.setTreeIndex(++treeIndex);
-            final Set<Element> children = treeMap.get(element);
-            if (children != null) {
-                for (final Element child : children) {
-                    child.setTreeDepth(element.getTreeDepth() + 1);
+                    final Element parent;
+                    if (idElementMap.containsKey(roomId)) {
+                        parent = idElementMap.get(roomId);
+                    } else {
+                        parent =  nameBuildingMap.get(DEFAULT);
+                    }
+
+                    final Element element;
+                    if (idElementMap.containsKey(elementId)) {
+                        element = idElementMap.get(elementId);
+                        element.setBus(bus);
+                        element.setParent(parent);
+                        element.setName(name);
+                        element.setCategory(category);
+                        element.setType(ElementType.DEVICE);
+                    } else {
+                        element = new Element(elementId, parent, owner, ElementType.DEVICE, name, category);
+                        element.setBus(bus);
+                        elements.add(element);
+                        idElementMap.put(element.getElementId(), element);
+                    }
                 }
-                elementsToIterate.addAll(children);
             }
-        }
 
-        ElementDao.saveElements(entityManager, elements);
-        entityManager.clear();
-        final Bus loadedBus = BusDao.getBus(entityManager, bus.getBusId());
-        if (loadedBus != null) {
-            loadedBus.setInventorySynchronized(new Date());
-            BusDao.saveBuses(entityManager, Collections.singletonList(loadedBus));
-            LOGGER.info("Synchronized inventory from bus: " + bus.getName());
+            final List<Element> roots = new ArrayList<>();
+            final Map<Element, Set<Element>> treeMap = new HashMap<>();
+
+            for (final Element element : elements) {
+                if (element.getParent() == null) {
+                    element.setTreeDepth(0);
+                    roots.add(element);
+                } else {
+                    final Element parent = idElementMap.get(element.getParent().getElementId());
+                    if (parent != null) {
+                        if (!treeMap.containsKey(parent)) {
+                            treeMap.put(parent, new TreeSet<Element>());
+                        }
+                        treeMap.get(parent).add(element);
+                    }
+                }
+            }
+
+            final LinkedList<Element> elementsToIterate = new LinkedList<Element>();
+            elementsToIterate.addAll(roots);
+
+            int startTreeIndex = bus.getBusId().hashCode();
+            int treeIndex = startTreeIndex;
+            while (elementsToIterate.size() > 0) {
+                final Element element = elementsToIterate.removeFirst();
+                element.setTreeIndex(++treeIndex);
+                final Set<Element> children = treeMap.get(element);
+                if (children != null) {
+                    for (final Element child : children) {
+                        child.setTreeDepth(element.getTreeDepth() + 1);
+                    }
+                    elementsToIterate.addAll(children);
+                }
+            }
+
+            ElementDao.saveElements(entityManager, elements);
+            entityManager.clear();
+            final Bus loadedBus = BusDao.getBus(entityManager, bus.getBusId());
+            if (loadedBus != null) {
+                loadedBus.setInventorySynchronized(new Date());
+                BusDao.saveBuses(entityManager, Collections.singletonList(loadedBus));
+                LOGGER.info("Synchronized inventory from bus: " + bus.getName());
+            }
+
         }
     }
 

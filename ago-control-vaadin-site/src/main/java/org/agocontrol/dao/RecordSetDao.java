@@ -154,9 +154,9 @@ public final class RecordSetDao {
     public static List<RecordSet> getRecordSetsByParent(final EntityManager entityManager, final Element parent,
                                                         final RecordType type) {
         final TypedQuery<RecordSet> query = entityManager.createQuery(
-                "select e from RecordSet as e where e.element.parentId=:parentId and e.type=:type",
+                "select e from RecordSet as e where e.element.parent=:parent and e.type=:type",
                 RecordSet.class);
-        query.setParameter("parentId", parent.getElementId());
+        query.setParameter("parent", parent);
         query.setParameter("type", type);
         return query.getResultList();
     }

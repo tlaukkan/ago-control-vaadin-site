@@ -114,7 +114,7 @@ public final class ElementFlowlet extends AbstractFlowlet implements ValidatingE
                 }
                 final BusClient busClient = ((AgoControlSiteUI) UI.getCurrent()).getBusClient(entity.getBus());
                 if (busClient != null) {
-                    if (busClient.saveElement(entity)) {
+                    if (busClient.saveElement(entity) && busClient.synchronizeInventory()) {
                         Notification.show("Element save sent to bus.",
                                 Notification.Type.HUMANIZED_MESSAGE);
                     } else {
