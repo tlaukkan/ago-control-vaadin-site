@@ -150,35 +150,19 @@ public final class ElementsFlowlet extends AbstractFlowlet {
             public void buttonClick(final ClickEvent event) {
                 final Element element = container.getEntity(grid.getSelectedItemId());
 
-                final BusClient busClient = ((AgoControlSiteUI) UI.getCurrent()).getBusClient(element.getBus());
-                if (busClient != null) {
-                        switch (element.getType()) {
-                        case BUILDING:
-                            break;
-                        case ROOM:
-                            if (busClient.removeRoom(element.getElementId())) {
-                                Notification.show("Device removal sent to bus.",
-                                        Notification.Type.HUMANIZED_MESSAGE);
-                            } else {
-                                Notification.show("Device removal bus error.",
-                                        Notification.Type.ERROR_MESSAGE);
-                            }
-                            break;
-                        case DEVICE:
-                            if (busClient.removeDevice(element.getElementId())) {
-                                Notification.show("Device removal sent to bus.",
-                                        Notification.Type.HUMANIZED_MESSAGE);
-                            } else {
-                                Notification.show("Device removal bus error.",
-                                        Notification.Type.ERROR_MESSAGE);
-                            }
-                            break;
-                        default:
-                    }
-                }
-
                 container.removeItem(grid.getSelectedItemId());
                 container.commit();
+
+                final BusClient busClient = ((AgoControlSiteUI) UI.getCurrent()).getBusClient(element.getBus());
+                if (busClient != null) {
+                    if (busClient.removeElement(element)) {
+                        Notification.show("Element removal sent to bus.",
+                                Notification.Type.HUMANIZED_MESSAGE);
+                    } else {
+                        Notification.show("Element removal bus error.",
+                                Notification.Type.ERROR_MESSAGE);
+                    }
+                }
             }
         });
 

@@ -21,8 +21,12 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.UI;
+import org.agocontrol.client.BusClient;
 import org.agocontrol.model.Element;
 import org.agocontrol.site.AgoControlSiteFields;
+import org.agocontrol.site.AgoControlSiteUI;
 import org.vaadin.addons.sitekit.flow.AbstractFlowlet;
 import org.vaadin.addons.sitekit.grid.ValidatingEditor;
 import org.vaadin.addons.sitekit.grid.ValidatingEditorStateListener;
@@ -107,6 +111,16 @@ public final class ElementFlowlet extends AbstractFlowlet implements ValidatingE
                         entityManager.getTransaction().rollback();
                     }
                     throw new RuntimeException("Failed to save entity: " + entity, t);
+                }
+                final BusClient busClient = ((AgoControlSiteUI) UI.getCurrent()).getBusClient(entity.getBus());
+                if (busClient != null) {
+                    if (busClient.saveElement(entity)) {
+                        Notification.show("Element save sent to bus.",
+                                Notification.Type.HUMANIZED_MESSAGE);
+                    } else {
+                        Notification.show("Element save bus error.",
+                                Notification.Type.ERROR_MESSAGE);
+                    }
                 }
             }
         });

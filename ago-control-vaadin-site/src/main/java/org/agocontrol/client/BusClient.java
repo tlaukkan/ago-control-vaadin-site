@@ -260,40 +260,62 @@ public class BusClient {
     }
 
     /**
-     * Removes room.
-     * @param roomId the room id
-     * @return true if removal was success.
+     * Save element.
+     * @param element the element
+     * @return true if element save was success.
      */
-    public final boolean removeRoom(final String roomId) {
+    public final boolean saveElement(final Element element) {
         try {
-            final MapMessage commandMessage = createMapMessage();
-            commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
-            commandMessage.setString("command", "deleteroom");
-            commandMessage.setString("uuid", roomId);
-            final Message replyMessage = sendCommand(commandMessage);
-            LOGGER.error("Room delete response message: " + replyMessage.toString());
+            switch (element.getType()) {
+                case ROOM: {
+                    final MapMessage commandMessage = createMapMessage();
+                    commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+                    commandMessage.setString("command", "setroomname");
+                    commandMessage.setString("uuid", element.getElementId());
+                    commandMessage.setString("name", element.getName());
+                    final Message replyMessage = sendCommand(commandMessage);
+                    LOGGER.error("Room save response message: " + replyMessage.toString());
+                    break;
+                }
+                default:
+            }
             return true;
         } catch (final Exception e) {
-            LOGGER.error("Error removing room.", e);
+            LOGGER.error("Error saving element via bus.", e);
             return false;
         }
     }
 
     /**
-     * Removes device.
-     * @param deviceId the device id
-     * @return true if removal was success.
+     * Removes element.
+     * @param element the element
+     * @return true if element was success.
      */
-    public final boolean removeDevice(final String deviceId) {
+    public final boolean removeElement(final Element element) {
         try {
-            final MapMessage commandMessage = createMapMessage();
-            commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
-            commandMessage.setStringProperty("qpid.subject", "event.device.remove");
-            commandMessage.setString("uuid", deviceId);
-            sendEvent(commandMessage);
+            switch (element.getType()) {
+                case ROOM: {
+                    final MapMessage commandMessage = createMapMessage();
+                    commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+                    commandMessage.setString("command", "deleteroom");
+                    commandMessage.setString("uuid", element.getElementId());
+                    final Message replyMessage = sendCommand(commandMessage);
+                    LOGGER.error("Room delete response message: " + replyMessage.toString());
+                    break;
+                }
+                case DEVICE: {
+                    final MapMessage commandMessage = createMapMessage();
+                    commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+                    commandMessage.setStringProperty("qpid.subject", "event.device.remove");
+                    commandMessage.setString("uuid", element.getElementId());
+                    sendEvent(commandMessage);
+                    break;
+                }
+                default:
+            }
             return true;
         } catch (final Exception e) {
-            LOGGER.error("Error removing device.", e);
+            LOGGER.error("Error removing room via bus.", e);
             return false;
         }
     }
