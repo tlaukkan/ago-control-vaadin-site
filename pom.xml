@@ -46,6 +46,8 @@
     </repositories>
 
     <modules>
+        <module>ago-control-common</module>
+        <module>ago-control-server-agent</module>
         <module>ago-control-vaadin-site</module>
     </modules>
 

@@ -16,12 +16,10 @@
 package org.agocontrol.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vaadin.ui.Notification;
 import org.agocontrol.dao.BusDao;
 import org.agocontrol.dao.ElementDao;
 import org.agocontrol.dao.EventDao;
 import org.agocontrol.model.Bus;
-import org.agocontrol.model.BusConnectionStatus;
 import org.agocontrol.model.Element;
 import org.agocontrol.model.ElementType;
 import org.agocontrol.model.Event;
@@ -60,7 +58,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
