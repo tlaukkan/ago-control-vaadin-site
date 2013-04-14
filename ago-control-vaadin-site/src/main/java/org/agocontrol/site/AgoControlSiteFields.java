@@ -27,6 +27,7 @@ import org.agocontrol.model.Record;
 import org.agocontrol.model.RecordSet;
 import org.agocontrol.model.RecordType;
 import org.agocontrol.site.viewlet.bus.BusConnectionStatusField;
+import org.agocontrol.site.viewlet.element.BusField;
 import org.agocontrol.site.viewlet.element.ElementTypeField;
 import org.agocontrol.site.viewlet.record.RecordSetField;
 import org.agocontrol.site.viewlet.recordset.ElementField;
@@ -165,6 +166,10 @@ public final class AgoControlSiteFields {
                 TextField.class, null,
                 100, null, String.class, null,
                 true, false, false));
+        AgoControlSiteFields.add(Element.class, new FieldDescriptor(
+                "bus", "Bus", BusField.class, null,
+                100, null, Bus.class,
+                null, false, false, false));
         AgoControlSiteFields.add(Element.class, new FieldDescriptor(
                 "parentId", "Parent ID",
                 TextField.class, null,

@@ -9,9 +9,14 @@
     </layout>
   </appender>
 
-  <root>
-    <priority value ="debug" />
+  <logger name="org.agocontrol" additivity="false">
+    <level value="debug"/>
     <appender-ref ref="console" />
-  </root>
+  </logger>
+
+    <root>
+        <priority value ="error" />
+        <appender-ref ref="console" />
+    </root>
 
 </log4j:configuration>

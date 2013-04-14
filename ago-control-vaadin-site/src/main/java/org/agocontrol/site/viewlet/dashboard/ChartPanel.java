@@ -219,7 +219,7 @@ public class ChartPanel extends AbstractViewlet {
                 break;
             }
             if (element.getType() == ElementType.DEVICE) {
-                break;
+                continue;
             }
 
             recordSets.addAll(RecordSetDao.getRecordSetsByParent(

@@ -103,7 +103,7 @@ public class BusClientManager {
     /**
      * Closes the manager.
      */
-    public final void close() {
+    public final synchronized void close() {
         closeRequested = true;
         managerThread.interrupt();
         try {
@@ -111,6 +111,15 @@ public class BusClientManager {
         } catch (InterruptedException e) {
             LOGGER.debug("BusClientManager close wait interrupted.");
         }
+    }
+
+    /**
+     * Get bus client.
+     * @param bus the bus
+     * @return the bus client
+     */
+    public final synchronized BusClient getBusClient(final Bus bus) {
+        return clients.get(bus);
     }
 
     /**

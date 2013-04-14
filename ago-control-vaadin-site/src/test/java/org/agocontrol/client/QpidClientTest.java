@@ -115,12 +115,14 @@ public class QpidClientTest {
         final MapMessage message = session.createMapMessage();
         message.setJMSMessageID("ID:" + UUID.randomUUID().toString());
         message.setJMSCorrelationID("ID:" + UUID.randomUUID().toString());
-        message.setString("command", "inventory");
+        message.setString("uuid", "9d1abba9-cd75-4a12-929c-ef28e1965fc4");
+        message.setString("id", "1");
+        message.setString("command", "on");
         message.setJMSReplyTo(replyQueue);
         messageProducer.send(message);
 
         for (int i = 0; i<100 ;i++) {
-            final MapMessage receivedMessage = (MapMessage)messageConsumer.receive();
+            final Message receivedMessage = (Message) messageConsumer.receive();
             System.out.println(receivedMessage);
             Thread.sleep(100);
         }

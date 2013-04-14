@@ -46,6 +46,11 @@ public final class Element implements Serializable, Comparable<Element> {
     @Id
     private String elementId;
 
+    /** the bus this element is associated with. */
+    @JoinColumn(nullable = true)
+    @ManyToOne(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH }, optional = false)
+    private Bus bus;
+
     /** Parent ID of the parent entity or own id if root. */
     @Column(nullable = false)
     private String parentId;
@@ -162,6 +167,20 @@ public final class Element implements Serializable, Comparable<Element> {
      */
     public void setElementId(final String elementId) {
         this.elementId = elementId;
+    }
+
+    /**
+     * @return the bus
+     */
+    public Bus getBus() {
+        return bus;
+    }
+
+    /**
+     * @param bus the bus
+     */
+    public void setBus(final Bus bus) {
+        this.bus = bus;
     }
 
     /**

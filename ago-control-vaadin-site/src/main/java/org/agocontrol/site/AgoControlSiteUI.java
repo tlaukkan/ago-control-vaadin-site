@@ -19,8 +19,10 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinServletRequest;
+import org.agocontrol.client.BusClient;
 import org.agocontrol.client.BusClientManager;
 import org.agocontrol.client.EventProcessor;
+import org.agocontrol.model.Bus;
 import org.agocontrol.site.viewlet.bus.BusFlowViewlet;
 import org.agocontrol.site.viewlet.dashboard.DashboardViewlet;
 import org.agocontrol.site.viewlet.element.ElementFlowViewlet;
@@ -82,6 +84,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
     private static final String PROPERTIES_CATEGORY = "ago-control-vaadin-site";
     /** The persistence unit to be used. */
     public static final String PERSISTENCE_UNIT = "ago-control-vaadin-site";
+    private static BusClientManager busClientManager;
 
     /**
      * Main method for running BareSiteUI.
@@ -122,7 +125,7 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         server.setHandler(context);
         server.start();
 
-        final BusClientManager busClientManager = new BusClientManager(entityManagerFactory);
+        busClientManager = new BusClientManager(entityManagerFactory);
         final EventProcessor eventProcessor = new EventProcessor(entityManagerFactory);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -146,6 +149,15 @@ public final class AgoControlSiteUI extends AbstractSiteUI implements ContentPro
         });
 
         server.join();
+    }
+
+    /**
+     * Get bus client.
+     * @param bus the bus
+     * @return the bus client
+     */
+    public BusClient getBusClient(final Bus bus) {
+        return busClientManager.getBusClient(bus);
     }
 
     @Override

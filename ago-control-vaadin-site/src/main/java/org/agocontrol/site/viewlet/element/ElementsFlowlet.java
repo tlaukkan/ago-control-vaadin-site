@@ -21,9 +21,13 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
+import org.agocontrol.client.BusClient;
 import org.agocontrol.model.Element;
 import org.agocontrol.site.AgoControlSiteFields;
+import org.agocontrol.site.AgoControlSiteUI;
 import org.vaadin.addons.lazyquerycontainer.EntityContainer;
 import org.vaadin.addons.sitekit.flow.AbstractFlowlet;
 import org.vaadin.addons.sitekit.grid.FieldDescriptor;
@@ -33,10 +37,13 @@ import org.vaadin.addons.sitekit.grid.Grid;
 import org.vaadin.addons.sitekit.model.Company;
 import org.vaadin.addons.sitekit.util.ContainerUtil;
 
+import javax.jms.MapMessage;
+import javax.jms.Message;
 import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Element list Flowlet.
@@ -97,6 +104,7 @@ public final class ElementsFlowlet extends AbstractFlowlet {
         grid.setFields(fieldDescriptors);
         grid.setFilters(filterDefinitions);
 
+        table.setColumnCollapsed("bus", true);
         table.setColumnCollapsed("created", true);
         table.setColumnCollapsed("modified", true);
         gridLayout.addComponent(grid, 0, 1);
@@ -140,6 +148,35 @@ public final class ElementsFlowlet extends AbstractFlowlet {
 
             @Override
             public void buttonClick(final ClickEvent event) {
+                final Element element = container.getEntity(grid.getSelectedItemId());
+
+                switch (element.getType()) {
+                    case BUILDING:
+                        break;
+                    case ROOM:
+                        break;
+                    case DEVICE:
+                        final BusClient busClient = ((AgoControlSiteUI) UI.getCurrent()).getBusClient(element.getBus());
+
+                        if (busClient != null) {
+                            try {
+                                final MapMessage commandMessage = busClient.createMapMessage();
+                                commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+                                commandMessage.setString("command", "off");
+                                commandMessage.setString("uuid", element.getElementId());
+                                final Message replyMessage = busClient.sendCommand(commandMessage);
+                                Notification.show("Element removed via bus: " + replyMessage.toString(),
+                                        Notification.Type.HUMANIZED_MESSAGE);
+                            } catch (final Exception e) {
+                                Notification.show("Error in element removal via bus.", Notification.Type.ERROR_MESSAGE);
+                                return;
+                            }
+                        }
+
+                        break;
+                    default:
+                }
+
                 container.removeItem(grid.getSelectedItemId());
                 container.commit();
             }
