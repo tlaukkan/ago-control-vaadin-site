@@ -562,7 +562,7 @@ public class BusClient {
                     for (final Element child : children) {
                         child.setTreeDepth(element.getTreeDepth() + 1);
                     }
-                    elementsToIterate.addAll(children);
+                    elementsToIterate.addAll(0, children);
                 }
             }
 

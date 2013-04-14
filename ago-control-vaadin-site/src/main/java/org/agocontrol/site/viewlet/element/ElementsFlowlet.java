@@ -104,6 +104,7 @@ public final class ElementsFlowlet extends AbstractFlowlet {
         grid.setFields(fieldDescriptors);
         grid.setFilters(filterDefinitions);
 
+        table.setColumnCollapsed("elementId", true);
         table.setColumnCollapsed("bus", true);
         table.setColumnCollapsed("created", true);
         table.setColumnCollapsed("modified", true);
