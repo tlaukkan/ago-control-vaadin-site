@@ -16,6 +16,7 @@
 package org.agocontrol.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vaadin.ui.Notification;
 import org.agocontrol.dao.BusDao;
 import org.agocontrol.dao.ElementDao;
 import org.agocontrol.dao.EventDao;
@@ -60,6 +61,7 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Ago control qpid client.
@@ -258,19 +260,80 @@ public class BusClient {
     }
 
     /**
+     * Removes room.
+     * @param roomId the room id
+     * @return true if removal was success.
+     */
+    public final boolean removeRoom(final String roomId) {
+        try {
+            final MapMessage commandMessage = createMapMessage();
+            commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+            commandMessage.setString("command", "deleteroom");
+            commandMessage.setString("uuid", roomId);
+            final Message replyMessage = sendCommand(commandMessage);
+            LOGGER.error("Room delete response message: " + replyMessage.toString());
+            return true;
+        } catch (final Exception e) {
+            LOGGER.error("Error removing room.", e);
+            return false;
+        }
+    }
+
+    /**
+     * Removes device.
+     * @param deviceId the device id
+     * @return true if removal was success.
+     */
+    public final boolean removeDevice(final String deviceId) {
+        try {
+            final MapMessage commandMessage = createMapMessage();
+            commandMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+            commandMessage.setStringProperty("qpid.subject", "event.device.remove");
+            commandMessage.setString("uuid", deviceId);
+            sendEvent(commandMessage);
+            return true;
+        } catch (final Exception e) {
+            LOGGER.error("Error removing device.", e);
+            return false;
+        }
+    }
+
+    /**
+     * Sends event message.
+     *
+     * @param eventMessage the eventMessage
+     * @return the reply
+     */
+    public final void sendEvent(final MapMessage eventMessage) {
+        synchronized (messageProducer) {
+            try {
+                messageProducer.send(eventMessage);
+            } catch (Exception e) {
+                throw new RuntimeException("Error in event message sending.", e);
+            }
+        }
+    }
+
+    /**
      * Sends command message and waits for response.
      *
      * @param commandMessage the commandMessage
      * @return the reply
      */
     public final Message sendCommand(final MapMessage commandMessage) {
-        synchronized (replyMessageQueue) {
+        synchronized (messageProducer) {
             try {
                 commandMessage.setJMSReplyTo(replyQueue);
                 messageProducer.send(commandMessage);
-                return (Message) replyMessageQueue.poll(5, TimeUnit.SECONDS);
+                final Message replyMessage = replyMessageQueue.poll(5, TimeUnit.SECONDS);
+
+                if (replyMessage == null) {
+                    throw new TimeoutException("Timeout in command processing.");
+                }
+
+                return replyMessage;
             } catch (Exception e) {
-                throw new RuntimeException("Error in message sending.", e);
+                throw new RuntimeException("Error in command message sending.", e);
             }
         }
     }
@@ -357,6 +420,9 @@ public class BusClient {
             final Map<String, Object> inventory = (Map) result.get("inventory");
             for (final String elementId : ((Map<String, Object>) result.get("inventory")).keySet()) {
                 final Map<String, Object> elementMessage = (Map) inventory.get(elementId);
+                if (elementMessage == null) {
+                    continue;
+                }
                 final String name = (String) elementMessage.get("name");
                 final String roomId = (String) elementMessage.get("room");
                 final String category = (String) elementMessage.get("devicetype");
@@ -475,10 +541,12 @@ public class BusClient {
             final String eventJsonString = mapper.writeValueAsString(map);
             EventDao.saveEvents(entityManager, Collections.singletonList(
                     new Event(owner, eventJsonString, new Date())));
+            return;
         }
 
         if (message instanceof JMSBytesMessage) {
             LOGGER.warn("Unhandled byte message: " + message.toString());
+            return;
         }
 
         LOGGER.warn("Unhandled message type " + message.toString());
