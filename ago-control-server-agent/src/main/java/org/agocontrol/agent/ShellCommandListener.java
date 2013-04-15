@@ -17,6 +17,8 @@ package org.agocontrol.agent;
 
 import org.apache.log4j.Logger;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Map;
 
 /**
@@ -33,9 +35,42 @@ public class ShellCommandListener implements CommandListener {
         LOGGER.debug("Processing command: " + command.toString());
 
         if ("screenon".equals(command.get("command"))) {
-            LOGGER.debug("Switching agent server screen on.");
+            executeShellCommand("/usr/bin/xset dpms force on");
         }
 
         return null;
+    }
+
+    /**
+     * Executes requested shell command.
+     *
+     * @param cmd the shell command to execute
+     */
+    private void executeShellCommand(String cmd) {
+        LOGGER.debug("Executing: " + cmd);
+        try {
+            Runtime runtime = Runtime.getRuntime();
+            Process process = runtime.exec(cmd);
+            process.waitFor();
+
+            String line;
+
+            BufferedReader error = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            while ((line = error.readLine()) != null){
+                LOGGER.error(line);
+            }
+            error.close();
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            while ((line = input.readLine()) != null){
+                LOGGER.debug(line);
+            }
+
+            input.close();
+
+            LOGGER.debug("Completed: " + cmd);
+        } catch (final Throwable t) {
+            LOGGER.error("Error executing shell command: " + cmd, t);
+        }
     }
 }
