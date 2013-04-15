@@ -21,6 +21,7 @@ import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.message.JMSBytesMessage;
 import org.apache.qpid.messaging.Address;
 
+import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -34,10 +35,14 @@ import javax.jms.Session;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -115,6 +120,10 @@ public class AgentBusClient {
      * The port.
      */
     private final int port;
+    /**
+     * The command listeners.
+     */
+    private Map<String, List<CommandListener>> commandListeners = new HashMap();
 
     /**
      * Constructor which sets entityManagerFactory.
@@ -161,7 +170,7 @@ public class AgentBusClient {
                 while (!closeRequested) {
                     try {
                         Thread.sleep(POLL_WAIT_MILLIS);
-                        handleEvent();
+                        handleMessage();
                     } catch (final Throwable t) {
                         LOGGER.error("Error in handling events.", t);
                     }
@@ -188,6 +197,31 @@ public class AgentBusClient {
         LOGGER.info("Connected to bus: " + host + ":" + port);
     }
 
+    /**
+     * Adds command listener for given device ID.
+     * @param deviceId the deviceId
+     * @param commandListener the commandListener
+     */
+    public final void addCommandListener(final String deviceId, final CommandListener commandListener) {
+        synchronized (commandListeners) {
+        if (!commandListeners.containsKey(deviceId)) {
+            commandListeners.put(deviceId, new ArrayList<CommandListener>());
+        }
+        commandListeners.get(deviceId).add(commandListener);
+        }
+    }
+
+    /**
+     * Removes command listener.
+     * @param deviceId the device id
+     * @param commandListener the commandListener
+     */
+    public final void removeCommandListener(final String deviceId, final CommandListener commandListener) {
+        if (commandListeners.containsKey(deviceId)) {
+            commandListeners.get(deviceId).remove(commandListener);
+        }
+    }
+
 
     /**
      * Closes client.
@@ -203,6 +237,43 @@ public class AgentBusClient {
         connection.close();
         context.close();
         LOGGER.info("Disconnected from bus: " + host + ":" + port);
+    }
+
+    public final boolean announceDevice(final String deviceId, final String deviceType, final String deviceName) {
+        try {
+            {
+                final MapMessage commandMessage = createMapMessage();
+                commandMessage.setStringProperty("qpid.subject", "event.device.announce");
+                commandMessage.setString("uuid", deviceId);
+                commandMessage.setString("devicetype", deviceType);
+                sendEvent(commandMessage);
+            }
+            {
+                final Map<String, Object> commandMap = new HashMap<>();
+                commandMap.put("command", "setdevicename");
+                commandMap.put("uuid", deviceId);
+                commandMap.put("name", deviceName);
+                sendCommand(commandMap);
+            }
+            return true;
+        } catch (final Exception e) {
+            LOGGER.error("Error adding device: " + deviceId + " (" + deviceType + ")", e);
+            return false;
+        }
+
+    }
+
+    public final boolean removeDevice(final String deviceId, final String deviceType) {
+        try {
+            final MapMessage commandMessage = createMapMessage();
+            commandMessage.setStringProperty("qpid.subject", "event.device.remove");
+            commandMessage.setString("uuid", deviceId);
+            sendEvent(commandMessage);
+            return true;
+        } catch (final Exception e) {
+            LOGGER.error("Error removing device: " + deviceId + " (" + deviceType + ")", e);
+            return false;
+        }
     }
 
     /**
@@ -224,29 +295,58 @@ public class AgentBusClient {
     /**
      * Sends command message and waits for response.
      *
-     * @param commandMessage the commandMessage
+     * @param commandMap the parameters
      * @return the reply
      */
-    public final Message sendCommand(final MapMessage commandMessage) {
+    public final Message sendCommand(final Map<String, Object> commandMap) {
         synchronized (messageProducer) {
             try {
                 replyMessageQueue.clear(); // clear reply queue to remove any unprocessed responses.
 
+                final MapMessage commandMessage = createMapMessage();
+                for (final String key : commandMap.keySet()) {
+                    commandMessage.setObject(key, commandMap.get(key));
+                }
+
                 commandMessage.setJMSReplyTo(replyQueue);
+
+                LOGGER.debug("Sending command: " + commandMap.toString());
+
                 messageProducer.send(commandMessage);
 
-                final Message replyMessage = replyMessageQueue.poll(5, TimeUnit.SECONDS);
+                Message replyMessage = replyMessageQueue.poll(5, TimeUnit.SECONDS);
                 if (replyMessage == null) {
                     throw new TimeoutException("Timeout in command processing.");
                 }
 
-                final Message replyMessageTwo = replyMessageQueue.poll(300, TimeUnit.MILLISECONDS);
-
-                if (replyMessageTwo != null) {
-                    LOGGER.debug("Received two commands responses.");
+                if (replyMessage instanceof BytesMessage) {
+                    final byte[] buffer = new byte[(int) ((BytesMessage) replyMessage).getBodyLength()];
+                    int readBytes = ((BytesMessage) replyMessage).readBytes(buffer);
+                    LOGGER.debug("Command reply: " + new String(buffer));
+                } else {
+                    LOGGER.debug("Command reply: " + replyMessage);
                 }
 
-                return replyMessageTwo != null ? replyMessageTwo : replyMessage;
+                while (true) {
+                    final Message secondaryReplyMessage = replyMessageQueue.poll(1000, TimeUnit.MILLISECONDS);
+
+                    if (secondaryReplyMessage != null) {
+                        replyMessage = secondaryReplyMessage;
+                        if (secondaryReplyMessage instanceof BytesMessage) {
+                            final byte[] buffer = new byte[(int) ((BytesMessage) secondaryReplyMessage).getBodyLength()];
+                            int readBytes = ((BytesMessage) secondaryReplyMessage).readBytes(buffer);
+
+                            LOGGER.debug("Command reply: " + new String(buffer));
+                        } else {
+                            LOGGER.debug("Command reply: " + secondaryReplyMessage);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+
+                return replyMessage;
             } catch (Exception e) {
                 throw new RuntimeException("Error in command message sending.", e);
             }
@@ -283,30 +383,76 @@ public class AgentBusClient {
      *
      * @throws Exception if exception occurs.
      */
-    private void handleEvent() throws Exception  {
+    private void handleMessage() throws Exception  {
         final Message message = messageConsumer.receive();
+
+        if (message == null) {
+            return;
+        }
 
         if (message instanceof MapMessage) {
             final MapMessage mapMessage = (MapMessage) message;
-            if (mapMessage == null) {
-                return;
-            }
 
             final String subject = mapMessage.getStringProperty("qpid.subject");
             if (subject == null || !subject.startsWith("event")) {
+                final Map<String, Object> map = convertMapMessageToMap(mapMessage);
+                LOGGER.debug("Observed command: " + map.toString());
+
+                if ("setdevicename".equals(map.get("command"))) {
+                    return;
+                }
+                if ("removedevice".equals(map.get("command"))) {
+                    return;
+                }
+
+                if (map.containsKey("uuid")) {
+                    final String deviceId = (String) map.get("uuid");
+                    if (commandListeners.containsKey(deviceId)) {
+                        final MessageProducer replyProducer;
+                        if (mapMessage.getJMSReplyTo() != null) {
+                            replyProducer = session.createProducer(mapMessage.getJMSReplyTo());
+                        } else {
+                            replyProducer = null;
+                        }
+
+                        boolean replySent = false;
+                        for (final CommandListener commandListener : commandListeners.get(deviceId)) {
+                            final Map<String, Object> replyMap = commandListener.commandReceived(map);
+
+                            if (replyProducer != null) {
+                                if (replyMap == null || replyMap.size() == 0) {
+                                    continue;
+                                }
+
+                                final MapMessage replyMessage = createMapMessage();
+                                //replyMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+                                for (final String key : replyMap.keySet()) {
+                                    replyMessage.setObject(key, replyMap.get(key));
+                                }
+                                replyProducer.send(replyMessage);
+                                replySent = true;
+                            }
+                        }
+
+                        if (replyProducer != null) {
+                            if (!replySent) {
+                                final BytesMessage okMessage = session.createBytesMessage();
+                                okMessage.writeBytes("ACK".getBytes());
+                                replyProducer.send(okMessage);
+                            }
+                            replyProducer.close();
+                        }
+
+                    }
+                }
+
+                return;
+            } else {
+                final Map<String, Object> map = convertMapMessageToMap(mapMessage);
+                map.put("event", subject);
+                LOGGER.debug("Observed event: " + map.toString());
                 return;
             }
-            if (subject.equals("event.environment.timechanged")) {
-                return; // Ignore time changed events.
-            }
-
-            final Map<String, Object> map = convertMapMessageToMap(mapMessage);
-
-            map.put("event", subject);
-
-            // TODO implement event handling
-
-            return;
         }
 
         if (message instanceof JMSBytesMessage) {

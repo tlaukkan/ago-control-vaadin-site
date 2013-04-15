@@ -22,6 +22,9 @@ import org.vaadin.addons.sitekit.site.AbstractSiteUI;
 import org.vaadin.addons.sitekit.site.ContentProvider;
 import org.vaadin.addons.sitekit.util.PropertiesUtil;
 
+import java.nio.charset.Charset;
+import java.util.UUID;
+
 /**
  * BareSite UI.
  *
@@ -49,14 +52,27 @@ public final class AgoControlAgent {
         final Thread mainThread = Thread.currentThread();
         DOMConfigurator.configure("./log4j.xml");
 
+        final String serverName = PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "server-name");
+        final String serverType = PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "server-type");
+        final String serverId = UUID.nameUUIDFromBytes(serverName.getBytes(Charset.forName("UTF-8"))).toString();
+
         final AgentBusClient busClient = new AgentBusClient(
-                PropertiesUtil.getProperty("ago-control-vaadin-site", "ago-control-bus-user"),
-                PropertiesUtil.getProperty("ago-control-vaadin-site", "ago-control-bus-password"),
-                PropertiesUtil.getProperty("ago-control-vaadin-site", "ago-control-bus-address"),
-                Integer.parseInt(PropertiesUtil.getProperty("ago-control-vaadin-site", "ago-control-bus-port")));
+                PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "ago-control-bus-user"),
+                PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "ago-control-bus-password"),
+                PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "ago-control-bus-address"),
+                Integer.parseInt(PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "ago-control-bus-port")));
+
+        busClient.addCommandListener(serverId, new ShellCommandListener());
+
+        if (!busClient.announceDevice(serverId, serverType, serverName)) {
+            busClient.close();
+            LOGGER.error("Error announcing server as device. Startup of ago control server agent canceled.");
+            return;
+        }
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
+                busClient.removeDevice(serverId, serverType);
                 try {
                     busClient.close();
                 } catch (final Throwable t) {
@@ -72,7 +88,11 @@ public final class AgoControlAgent {
         });
 
         while(!shutdown) {
-            Thread.sleep(SHUTDOWN_WAIT_SLEEP_MILLIS);
+            try {
+                Thread.sleep(SHUTDOWN_WAIT_SLEEP_MILLIS);
+            } catch (final InterruptedException e) {
+                LOGGER.debug("Shutdown wait sleep interrupted.");
+            }
         }
 
 
