@@ -38,6 +38,10 @@ public class ShellCommandListener implements CommandListener {
             executeShellCommand("/usr/bin/xset dpms force on");
         }
 
+        if ("screenoff".equals(command.get("command"))) {
+            executeShellCommand("/usr/bin/xset dpms force off");
+        }
+
         return null;
     }
 

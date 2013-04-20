@@ -398,19 +398,27 @@ public class AgentBusClient {
                 final Map<String, Object> map = convertMapMessageToMap(mapMessage);
                 LOGGER.debug("Observed command: " + map.toString());
 
-                if ("setdevicename".equals(map.get("command"))) {
+                /*if ("setdevicename".equals(map.get("command"))) {
                     return;
                 }
                 if ("removedevice".equals(map.get("command"))) {
                     return;
-                }
+                }*/
 
                 if (map.containsKey("uuid")) {
                     final String deviceId = (String) map.get("uuid");
                     if (commandListeners.containsKey(deviceId)) {
                         final MessageProducer replyProducer;
                         if (mapMessage.getJMSReplyTo() != null) {
-                            replyProducer = session.createProducer(mapMessage.getJMSReplyTo());
+                            if (mapMessage.getJMSReplyTo() instanceof AMQAnyDestination) {
+                                final AMQAnyDestination destination = (AMQAnyDestination) mapMessage.getJMSReplyTo();
+                                //final Queue replyToQueue = session.createQueue(destination.getSubject());
+                                final Destination replyDestination = new AMQAnyDestination(new Address("amq.direct",
+                                        destination.getSubject(), null));
+                                replyProducer = session.createProducer(replyDestination);
+                            } else {
+                                replyProducer = session.createProducer(mapMessage.getJMSReplyTo());
+                            }
                         } else {
                             replyProducer = null;
                         }
