@@ -111,7 +111,7 @@ public class AgentBusClient {
     /**
      * Reply message queue.
      */
-    private final BlockingQueue<Message> replyMessageQueue = new LinkedBlockingQueue<>(10);
+    private final BlockingQueue<Message> replyMessageQueue = new LinkedBlockingQueue<Message>(10);
     /**
      * The host.
      */
@@ -249,7 +249,7 @@ public class AgentBusClient {
                 sendEvent(commandMessage);
             }
             {
-                final Map<String, Object> commandMap = new HashMap<>();
+                final Map<String, Object> commandMap = new HashMap<String, Object>();
                 commandMap.put("command", "setdevicename");
                 commandMap.put("uuid", deviceId);
                 commandMap.put("name", deviceName);
@@ -492,7 +492,7 @@ public class AgentBusClient {
      * @throws javax.jms.JMSException if exception occurs in conversion.
      */
     private Map<String, Object> convertMapMessageToMap(final MapMessage message) throws JMSException {
-        final Map<String, Object> map = new HashMap<>();
+        final Map<String, Object> map = new HashMap<String, Object>();
 
         final Enumeration<String> keys = message.getMapNames();
         while (keys.hasMoreElements()) {

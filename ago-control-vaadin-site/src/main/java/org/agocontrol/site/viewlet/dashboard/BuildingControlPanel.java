@@ -103,11 +103,11 @@ public class BuildingControlPanel extends AbstractViewlet {
     /**
      * The record layouts.
      */
-    private final Map<String, GridLayout> recordsLayouts = new HashMap<>();
+    private final Map<String, GridLayout> recordsLayouts = new HashMap<String, GridLayout>();
     /**
      * The record layouts.
      */
-    private final BlockingQueue<List<Record>> recordsQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<List<Record>> recordsQueue = new LinkedBlockingQueue<List<Record>>();
     /**
      * True if record reader should exit.
      */

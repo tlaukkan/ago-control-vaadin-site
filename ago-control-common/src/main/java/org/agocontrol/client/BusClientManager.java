@@ -54,7 +54,7 @@ public class BusClientManager {
     /**
      * The bus clients.
      */
-    private Map<Bus, BusClient> clients = new HashMap<>();
+    private Map<Bus, BusClient> clients = new HashMap<Bus, BusClient>();
 
     /**
      * Constructor which allows setting the entity manager factory.
@@ -127,7 +127,7 @@ public class BusClientManager {
      * @param entityManager the entityManager
      */
     private void manageClients(final EntityManager entityManager) {
-        final Set<Bus> activeBuses = new HashSet<>();
+        final Set<Bus> activeBuses = new HashSet<Bus>();
 
         final List<Company> companies = CompanyDao.getCompanies(entityManager);
         for (final Company company : companies) {

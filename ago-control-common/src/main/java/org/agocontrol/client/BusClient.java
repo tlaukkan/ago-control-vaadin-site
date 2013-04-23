@@ -134,7 +134,7 @@ public class BusClient {
     /**
      * Reply message queue.
      */
-    private final BlockingQueue<Message> replyMessageQueue = new LinkedBlockingQueue<>(10);
+    private final BlockingQueue<Message> replyMessageQueue = new LinkedBlockingQueue<Message>(10);
 
     /**
      * Constructor which sets entityManagerFactory.
@@ -443,9 +443,9 @@ public class BusClient {
 
             final Map<String, Object> result = convertMapMessageToMap(mapMessage);
 
-            final List<Element> elements = new ArrayList<>(ElementDao.getElements(entityManager, owner));
-            final Map<String, Element> idElementMap = new HashMap<>();
-            final Map<String, Element> nameBuildingMap = new HashMap<>();
+            final List<Element> elements = new ArrayList<Element>(ElementDao.getElements(entityManager, owner));
+            final Map<String, Element> idElementMap = new HashMap<String, Element>();
+            final Map<String, Element> nameBuildingMap = new HashMap<String, Element>();
 
             for (final Element element : elements) {
                 if (element.getType() == ElementType.BUILDING) {
@@ -528,8 +528,8 @@ public class BusClient {
                 }
             }
 
-            final List<Element> roots = new ArrayList<>();
-            final Map<Element, Set<Element>> treeMap = new HashMap<>();
+            final List<Element> roots = new ArrayList<Element>();
+            final Map<Element, Set<Element>> treeMap = new HashMap<Element, Set<Element>>();
 
             for (final Element element : elements) {
                 if (element.getParent() == null) {
@@ -652,7 +652,7 @@ public class BusClient {
      * @throws JMSException if exception occurs in conversion.
      */
     private Map<String, Object> convertMapMessageToMap(final MapMessage message) throws JMSException {
-        final Map<String, Object> map = new HashMap<>();
+        final Map<String, Object> map = new HashMap<String, Object>();
 
         final Enumeration<String> keys = message.getMapNames();
         while (keys.hasMoreElements()) {

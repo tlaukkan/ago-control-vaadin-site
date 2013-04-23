@@ -203,7 +203,7 @@ public class ChartPanel extends AbstractViewlet {
         final List<RecordSet> recordSets = new ArrayList<RecordSet>();
 
         final List<Element> elements = ElementDao.getElements(entityManager, company);
-        final Map<String, Element> elementMap = new HashMap<>();
+        final Map<String, Element> elementMap = new HashMap<String, Element>();
 
         boolean started = false;
         for (final Element element : elements) {

@@ -18,7 +18,7 @@ public class DataSet {
     /**
      * The data value pairs.
      */
-    private List<List<Object>> data = new ArrayList<>();
+    private List<List<Object>> data = new ArrayList<List<Object>>();
 
     /**
      * @return the label
