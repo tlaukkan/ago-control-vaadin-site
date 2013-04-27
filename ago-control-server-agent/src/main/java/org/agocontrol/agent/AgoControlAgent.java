@@ -18,8 +18,6 @@ package org.agocontrol.agent;
 import com.vaadin.annotations.Theme;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
-import org.vaadin.addons.sitekit.site.AbstractSiteUI;
-import org.vaadin.addons.sitekit.site.ContentProvider;
 import org.vaadin.addons.sitekit.util.PropertiesUtil;
 
 import java.nio.charset.Charset;
@@ -57,38 +55,38 @@ public final class AgoControlAgent {
         final String serverType = PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "server-type");
         final String serverId = UUID.nameUUIDFromBytes(serverName.getBytes(Charset.forName("UTF-8"))).toString();
 
-        final AgentBusClient busClient = new AgentBusClient(
+        final AgoClient agoClient = new AgoClient(
                 PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "ago-control-bus-user"),
                 PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "ago-control-bus-password"),
                 PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "ago-control-bus-address"),
                 Integer.parseInt(PropertiesUtil.getProperty(PROPERTIES_CATEGORY, "ago-control-bus-port")));
 
-        busClient.addCommandListener(serverId, new ShellCommandListener());
+        agoClient.addCommandListener(serverId, new ShellCommandListener());
 
-        busClient.addCommandListener(null, new CommandListener() {
+        agoClient.addCommandListener(null, new CommandListener() {
             @Override
             public Map<String, Object> commandReceived(final Map<String, Object> parameters) {
                 LOGGER.debug("Received command: " + parameters.toString());
                 final String command = (String) parameters.get("command");
                 if ("discover".equals(command)) {
                     LOGGER.debug("Announcing all devices.");
-                    busClient.announceAllDevices();
+                    agoClient.announceAllDevices();
                 }
                 return null;
             }
         });
 
-        if (!busClient.addDevice(serverId, serverType, serverName)) {
-            busClient.close();
+        if (!agoClient.addDevice(serverId, serverType, serverName)) {
+            agoClient.close();
             LOGGER.error("Error announcing server as device. Startup of ago control server agent canceled.");
             return;
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                busClient.removeDevice(serverId, serverType);
+                agoClient.removeDevice(serverId, serverType);
                 try {
-                    busClient.close();
+                    agoClient.close();
                 } catch (final Throwable t) {
                     LOGGER.error("Error in event processor stop.", t);
                 }
@@ -109,9 +107,6 @@ public final class AgoControlAgent {
             }
         }
 
-
     }
-
-
 
 }

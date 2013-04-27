@@ -15,7 +15,6 @@
  */
 package org.agocontrol.agent;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.message.JMSBytesMessage;
@@ -51,17 +50,13 @@ import java.util.concurrent.TimeoutException;
  *
  * @author Tommi S.E. Laukkanen
  */
-public class AgentBusClient {
+public class AgoClient {
     /** The logger. */
-    private static final Logger LOGGER = Logger.getLogger(AgentBusClient.class);
+    private static final Logger LOGGER = Logger.getLogger(AgoClient.class);
     /**
      * The message poll wait in milliseconds.
      */
     public static final int POLL_WAIT_MILLIS = 100;
-    /**
-     * JSON object mapper.
-     * */
-    private final ObjectMapper mapper = new ObjectMapper();
     /**
      * The context.
      */
@@ -125,7 +120,7 @@ public class AgentBusClient {
     /**
      * The known devices.
      */
-    private Map<String, AgoControlDevice> devices = new HashMap<String, AgoControlDevice>();
+    private Map<String, AgoDevice> devices = new HashMap<String, AgoDevice>();
 
 
     /**
@@ -138,7 +133,7 @@ public class AgentBusClient {
      *
      * @throws Exception if exception occurs in connecting to bus.
      */
-    public AgentBusClient(final String userName, final String password, final String host, final int port)
+    public AgoClient(final String userName, final String password, final String host, final int port)
             throws Exception {
 
         this.host = host;
@@ -251,7 +246,7 @@ public class AgentBusClient {
      */
     public final boolean addDevice(final String deviceId, final String deviceType, final String deviceName) {
         synchronized (devices) {
-            devices.put(deviceId, new AgoControlDevice(deviceId, deviceType, deviceName));
+            devices.put(deviceId, new AgoDevice(deviceId, deviceType, deviceName));
         }
         return sendAnnounceDevice(deviceId, deviceType, deviceName);
     }
@@ -276,7 +271,7 @@ public class AgentBusClient {
     public final boolean announceAllDevices() {
         boolean success = true;
         synchronized (devices) {
-            for (final AgoControlDevice device : devices.values()) {
+            for (final AgoDevice device : devices.values()) {
                if (!sendAnnounceDevice(device.getDeviceId(), device.getDeviceType(), device.getDeviceName())) {
                    success = false;
                }
@@ -455,13 +450,6 @@ public class AgentBusClient {
             if (subject == null || !subject.startsWith("event")) {
                 final Map<String, Object> map = convertMapMessageToMap(mapMessage);
                 LOGGER.debug("Observed command: " + map.toString());
-
-                /*if ("setdevicename".equals(map.get("command"))) {
-                    return;
-                }
-                if ("removedevice".equals(map.get("command"))) {
-                    return;
-                }*/
 
                 if (!map.containsKey("uuid")
                         || (map.containsKey("uuid") && commandListeners.containsKey(map.containsKey("uuid")))) {

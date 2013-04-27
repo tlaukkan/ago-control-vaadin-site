@@ -20,7 +20,7 @@ package org.agocontrol.agent;
  *
  * @author Tommi S.E. Laukkanen
  */
-public final class AgoControlDevice {
+public final class AgoDevice {
     /** The device ID. */
     private final String deviceId;
     /** The device type. */
@@ -34,7 +34,7 @@ public final class AgoControlDevice {
      * @param deviceType the deviceType
      * @param deviceName the deviceName
      */
-    public AgoControlDevice(final String deviceId, final String deviceType, final String deviceName) {
+    public AgoDevice(final String deviceId, final String deviceType, final String deviceName) {
         this.deviceId = deviceId;
         this.deviceType = deviceType;
         this.deviceName = deviceName;
