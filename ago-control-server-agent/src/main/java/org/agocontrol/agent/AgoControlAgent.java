@@ -65,19 +65,6 @@ public final class AgoControlAgent {
 
         agoClient.addCommandListener(serverId, new ShellCommandListener());
 
-        agoClient.addCommandListener(null, new CommandListener() {
-            @Override
-            public Map<String, Object> commandReceived(final Map<String, Object> parameters) {
-                LOGGER.debug("Received command: " + parameters.toString());
-                final String command = (String) parameters.get("command");
-                if ("discover".equals(command)) {
-                    LOGGER.debug("Announcing all devices.");
-                    agoClient.announceAllDevices();
-                }
-                return null;
-            }
-        });
-
         if (!agoClient.addDevice(serverId, serverType, serverName)) {
             agoClient.close();
             LOGGER.error("Error announcing server as device. Startup of ago control server agent canceled.");

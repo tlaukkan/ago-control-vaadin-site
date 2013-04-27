@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Ago control qpid client.
+ * Ago control QPID client.
  *
  * @author Tommi S.E. Laukkanen
  */
@@ -143,8 +143,8 @@ public class AgoClient {
         properties.put("java.naming.factory.initial",
                 "org.apache.qpid.jndi.PropertiesFileInitialContextFactory");
         properties.put("connectionfactory.qpidConnectionfactory",
-                "amqp://" + userName + ":" + password + "@agocontrol/javaclient" +
-                        "?brokerlist='tcp://" + host + ":" + port + "'");
+                "amqp://" + userName + ":" + password + "@agocontrol/javaclient"
+                        + "?brokerlist='tcp://" + host + ":" + port + "'");
 
         context = new InitialContext(properties);
         connectionFactory = (ConnectionFactory) context.lookup("qpidConnectionfactory");
@@ -191,6 +191,19 @@ public class AgoClient {
             }
         });
         replyHandlerThread.start();
+
+        addCommandListener(null, new CommandListener() {
+            @Override
+            public Map<String, Object> commandReceived(final Map<String, Object> parameters) {
+                LOGGER.debug("Received command: " + parameters.toString());
+                final String command = (String) parameters.get("command");
+                if ("discover".equals(command)) {
+                    LOGGER.debug("Announcing all devices.");
+                    announceAllDevices();
+                }
+                return null;
+            }
+        });
 
         LOGGER.info("Connected to bus: " + host + ":" + port);
     }
@@ -288,20 +301,19 @@ public class AgoClient {
      */
     private boolean sendAnnounceDevice(final String deviceId, final String deviceType, final String deviceName) {
         try {
-            {
-                final MapMessage commandMessage = createMapMessage();
-                commandMessage.setStringProperty("qpid.subject", "event.device.announce");
-                commandMessage.setString("uuid", deviceId);
-                commandMessage.setString("devicetype", deviceType);
-                sendEvent(commandMessage);
-            }
-            {
-                final Map<String, Object> commandMap = new HashMap<String, Object>();
-                commandMap.put("command", "setdevicename");
-                commandMap.put("uuid", deviceId);
-                commandMap.put("name", deviceName);
-                sendCommand(commandMap);
-            }
+
+            final MapMessage announceMessage = createMapMessage();
+            announceMessage.setStringProperty("qpid.subject", "event.device.announce");
+            announceMessage.setString("uuid", deviceId);
+            announceMessage.setString("devicetype", deviceType);
+            sendEvent(announceMessage);
+
+            final Map<String, Object> commandMap = new HashMap<String, Object>();
+            commandMap.put("command", "setdevicename");
+            commandMap.put("uuid", deviceId);
+            commandMap.put("name", deviceName);
+            sendCommand(commandMap);
+
             return true;
         } catch (final Exception e) {
             LOGGER.error("Error adding device: " + deviceId + " (" + deviceType + ")", e);
@@ -333,7 +345,6 @@ public class AgoClient {
      * Sends event message.
      *
      * @param eventMessage the eventMessage
-     * @return the reply
      */
     public final void sendEvent(final MapMessage eventMessage) {
         synchronized (messageProducer) {
@@ -367,7 +378,8 @@ public class AgoClient {
 
                 messageProducer.send(commandMessage);
 
-                Message replyMessage = replyMessageQueue.poll(5, TimeUnit.SECONDS);
+                final long pollTimeOutSeconds = 5;
+                Message replyMessage = replyMessageQueue.poll(pollTimeOutSeconds, TimeUnit.SECONDS);
                 if (replyMessage == null) {
                     throw new TimeoutException("Timeout in command processing.");
                 }
@@ -386,7 +398,8 @@ public class AgoClient {
                     if (secondaryReplyMessage != null) {
                         replyMessage = secondaryReplyMessage;
                         if (secondaryReplyMessage instanceof BytesMessage) {
-                            final byte[] buffer = new byte[(int) ((BytesMessage) secondaryReplyMessage).getBodyLength()];
+                            final byte[] buffer = new byte[
+                                    (int) ((BytesMessage) secondaryReplyMessage).getBodyLength()];
                             int readBytes = ((BytesMessage) secondaryReplyMessage).readBytes(buffer);
 
                             LOGGER.debug("Command reply: " + new String(buffer));
