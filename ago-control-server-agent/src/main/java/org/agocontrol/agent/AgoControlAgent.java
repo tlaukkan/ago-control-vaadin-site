@@ -23,6 +23,7 @@ import org.vaadin.addons.sitekit.site.ContentProvider;
 import org.vaadin.addons.sitekit.util.PropertiesUtil;
 
 import java.nio.charset.Charset;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -64,7 +65,20 @@ public final class AgoControlAgent {
 
         busClient.addCommandListener(serverId, new ShellCommandListener());
 
-        if (!busClient.announceDevice(serverId, serverType, serverName)) {
+        busClient.addCommandListener(null, new CommandListener() {
+            @Override
+            public Map<String, Object> commandReceived(final Map<String, Object> parameters) {
+                LOGGER.debug("Received command: " + parameters.toString());
+                final String command = (String) parameters.get("command");
+                if ("discover".equals(command)) {
+                    LOGGER.debug("Announcing all devices.");
+                    busClient.announceAllDevices();
+                }
+                return null;
+            }
+        });
+
+        if (!busClient.addDevice(serverId, serverType, serverName)) {
             busClient.close();
             LOGGER.error("Error announcing server as device. Startup of ago control server agent canceled.");
             return;

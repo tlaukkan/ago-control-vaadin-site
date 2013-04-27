@@ -26,9 +26,9 @@ public interface CommandListener {
 
     /**
      * Invoked when command is received.
-     * @param command the command
+     * @param parameters the command parameters
      * @return the response
      */
-    Map<String, Object> commandReceived(final Map<String, Object> command);
+    Map<String, Object> commandReceived(final Map<String, Object> parameters);
 
 }

@@ -36,13 +36,11 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -124,6 +122,11 @@ public class AgentBusClient {
      * The command listeners.
      */
     private Map<String, List<CommandListener>> commandListeners = new HashMap();
+    /**
+     * The known devices.
+     */
+    private Map<String, AgoControlDevice> devices = new HashMap<String, AgoControlDevice>();
+
 
     /**
      * Constructor which sets entityManagerFactory.
@@ -239,7 +242,56 @@ public class AgentBusClient {
         LOGGER.info("Disconnected from bus: " + host + ":" + port);
     }
 
-    public final boolean announceDevice(final String deviceId, final String deviceType, final String deviceName) {
+    /**
+     * Adds device by adding it to device list and sending announce event.
+     * @param deviceId the deviceId
+     * @param deviceType the deviceType
+     * @param deviceName the deviceName
+     * @return true if communication with ago-control was success.
+     */
+    public final boolean addDevice(final String deviceId, final String deviceType, final String deviceName) {
+        synchronized (devices) {
+            devices.put(deviceId, new AgoControlDevice(deviceId, deviceType, deviceName));
+        }
+        return sendAnnounceDevice(deviceId, deviceType, deviceName);
+    }
+
+    /**
+     * Removes device by removing device from device list and sending remove event.
+     * @param deviceId the deviceId
+     * @param deviceType the deviceType
+     * @return true if communication with ago-control was success.
+     */
+    public final boolean removeDevice(final String deviceId, final String deviceType) {
+        synchronized (devices) {
+            devices.remove(deviceId);
+        }
+        return sendRemoveDevice(deviceId, deviceType);
+    }
+
+    /**
+     * Send announce event for all known devices.
+     * @return true if communication with ago-control was success.
+     */
+    public final boolean announceAllDevices() {
+        boolean success = true;
+        synchronized (devices) {
+            for (final AgoControlDevice device : devices.values()) {
+               if (!sendAnnounceDevice(device.getDeviceId(), device.getDeviceType(), device.getDeviceName())) {
+                   success = false;
+               }
+            }
+        }
+        return success;
+    }
+    /**
+     * Sends announce device event and set name command.
+     * @param deviceId the deviceId
+     * @param deviceType the deviceType
+     * @param deviceName the deviceName
+     * @return true if communication with ago-control was successful.
+     */
+    private boolean sendAnnounceDevice(final String deviceId, final String deviceType, final String deviceName) {
         try {
             {
                 final MapMessage commandMessage = createMapMessage();
@@ -263,7 +315,13 @@ public class AgentBusClient {
 
     }
 
-    public final boolean removeDevice(final String deviceId, final String deviceType) {
+    /**
+     * Sends remove device event.
+     * @param deviceId the deviceId
+     * @param deviceType the deviceType
+     * @return true if communication with ago-control was successful.
+     */
+    private boolean sendRemoveDevice(final String deviceId, final String deviceType) {
         try {
             final MapMessage commandMessage = createMapMessage();
             commandMessage.setStringProperty("qpid.subject", "event.device.remove");
@@ -405,53 +463,52 @@ public class AgentBusClient {
                     return;
                 }*/
 
-                if (map.containsKey("uuid")) {
-                    final String deviceId = (String) map.get("uuid");
-                    if (commandListeners.containsKey(deviceId)) {
-                        final MessageProducer replyProducer;
-                        if (mapMessage.getJMSReplyTo() != null) {
-                            if (mapMessage.getJMSReplyTo() instanceof AMQAnyDestination) {
-                                final AMQAnyDestination destination = (AMQAnyDestination) mapMessage.getJMSReplyTo();
-                                //final Queue replyToQueue = session.createQueue(destination.getSubject());
-                                final Destination replyDestination = new AMQAnyDestination(new Address("amq.direct",
-                                        destination.getSubject(), null));
-                                replyProducer = session.createProducer(replyDestination);
-                            } else {
-                                replyProducer = session.createProducer(mapMessage.getJMSReplyTo());
-                            }
+                if (!map.containsKey("uuid")
+                        || (map.containsKey("uuid") && commandListeners.containsKey(map.containsKey("uuid")))) {
+                    final MessageProducer replyProducer;
+                    if (mapMessage.getJMSReplyTo() != null) {
+                        if (mapMessage.getJMSReplyTo() instanceof AMQAnyDestination) {
+                            final AMQAnyDestination destination = (AMQAnyDestination) mapMessage.getJMSReplyTo();
+                            //final Queue replyToQueue = session.createQueue(destination.getSubject());
+                            final Destination replyDestination = new AMQAnyDestination(new Address("amq.direct",
+                                    destination.getSubject(), null));
+                            replyProducer = session.createProducer(replyDestination);
                         } else {
-                            replyProducer = null;
+                            replyProducer = session.createProducer(mapMessage.getJMSReplyTo());
                         }
+                    } else {
+                        replyProducer = null;
+                    }
 
-                        boolean replySent = false;
-                        for (final CommandListener commandListener : commandListeners.get(deviceId)) {
-                            final Map<String, Object> replyMap = commandListener.commandReceived(map);
-
-                            if (replyProducer != null) {
-                                if (replyMap == null || replyMap.size() == 0) {
-                                    continue;
-                                }
-
-                                final MapMessage replyMessage = createMapMessage();
-                                //replyMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
-                                for (final String key : replyMap.keySet()) {
-                                    replyMessage.setObject(key, replyMap.get(key));
-                                }
-                                replyProducer.send(replyMessage);
-                                replySent = true;
-                            }
-                        }
+                    boolean replySent = false;
+                    final String deviceId = (String) map.get("uuid");
+                    for (final CommandListener commandListener : commandListeners.get(deviceId)) {
+                        final Map<String, Object> replyMap = commandListener.commandReceived(map);
 
                         if (replyProducer != null) {
-                            if (!replySent) {
-                                final BytesMessage okMessage = session.createBytesMessage();
-                                okMessage.writeBytes("ACK".getBytes());
-                                replyProducer.send(okMessage);
+                            if (replyMap == null || replyMap.size() == 0) {
+                                continue;
                             }
-                            replyProducer.close();
-                        }
 
+                            final MapMessage replyMessage = createMapMessage();
+                            //replyMessage.setJMSMessageID("ID:" + UUID.randomUUID().toString());
+                            for (final String key : replyMap.keySet()) {
+                                replyMessage.setObject(key, replyMap.get(key));
+                            }
+                            replyProducer.send(replyMessage);
+                            replySent = true;
+                        }
                     }
+
+                    if (replyProducer != null) {
+                        if (!replySent) {
+                            final BytesMessage okMessage = session.createBytesMessage();
+                            okMessage.writeBytes("ACK".getBytes());
+                            replyProducer.send(okMessage);
+                        }
+                        replyProducer.close();
+                    }
+
                 }
 
                 return;
