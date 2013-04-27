@@ -26,7 +26,10 @@
 			<property name="eclipselink.cache.type.default" value="NONE"/>
 			<property name="eclipselink.ddl-generation.output-mode" value="database"/>
 			<property name="eclipselink.ddl-generation" value="none"/>
-			<property name="eclipselink.logging.level" value="WARNING"/>
+			<property name="eclipselink.logging.level" value="INFO"/>
+            <property name="eclipselink.weaving" value="false"/>
+            <!--<property name="eclipselink.logging.level.sql" value="FINE"/>
+            <property name="eclipselink.logging.parameters" value="true"/>-->
 			<property name="eclipselink.jdbc.timeout" value="3"/>
             <property name="eclipselink.jdbc.uppercase-columns" value="true" />
 		</properties>

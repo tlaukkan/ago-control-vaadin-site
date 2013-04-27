@@ -24,7 +24,9 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Table;
 import org.agocontrol.model.Record;
 import org.agocontrol.site.AgoControlSiteFields;
+import org.apache.log4j.Logger;
 import org.vaadin.addons.lazyquerycontainer.EntityContainer;
+import org.vaadin.addons.lazyquerycontainer.LazyEntityContainer;
 import org.vaadin.addons.sitekit.flow.AbstractFlowlet;
 import org.vaadin.addons.sitekit.grid.FieldDescriptor;
 import org.vaadin.addons.sitekit.grid.FilterDescriptor;
@@ -44,11 +46,12 @@ import java.util.List;
  * @author Tommi S.E. Laukkanen
  */
 public final class RecordsFlowlet extends AbstractFlowlet {
-
+    /** The logger. */
+    private static final Logger LOGGER = Logger.getLogger(RecordsFlowlet.class);
     /** Serial version UID. */
     private static final long serialVersionUID = 1L;
     /** The container. */
-    private EntityContainer<Record> container;
+    private LazyEntityContainer<Record> container;
     /** The grid. */
     private Grid grid;
 
@@ -74,7 +77,7 @@ public final class RecordsFlowlet extends AbstractFlowlet {
         final List<FilterDescriptor> filterDefinitions = new ArrayList<FilterDescriptor>();
 
         final EntityManager entityManager = getSite().getSiteContext().getObject(EntityManager.class);
-        container = new EntityContainer<Record>(entityManager, true, true, false, Record.class, 1000,
+        container = new LazyEntityContainer<Record>(entityManager, true, false, false, Record.class, 50,
                 new String[] {"created"},
                 new boolean[] {false}, "recordId");
 
@@ -149,12 +152,12 @@ public final class RecordsFlowlet extends AbstractFlowlet {
         container.removeDefaultFilters();
         container.addDefaultFilter(
                 new Compare.Equal("owner.companyId", company.getCompanyId()));
-        grid.refresh();
+
     }
 
     @Override
     public void enter() {
-        container.refresh();
+        grid.refresh();
     }
 
 }

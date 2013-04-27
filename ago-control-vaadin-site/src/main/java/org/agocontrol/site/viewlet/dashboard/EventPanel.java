@@ -24,9 +24,11 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
+import org.agocontrol.model.Event;
 import org.agocontrol.site.AgoControlSiteFields;
 import org.agocontrol.site.AgoControlSiteUI;
 import org.vaadin.addons.lazyquerycontainer.EntityContainer;
+import org.vaadin.addons.lazyquerycontainer.LazyEntityContainer;
 import org.vaadin.addons.sitekit.grid.FieldDescriptor;
 import org.vaadin.addons.sitekit.grid.FilterDescriptor;
 import org.vaadin.addons.sitekit.grid.FormattingTable;
@@ -48,7 +50,7 @@ import java.util.List;
  */
 public class EventPanel extends AbstractViewlet {
     /** The container. */
-    private EntityContainer<org.agocontrol.model.Event> container;
+    private LazyEntityContainer<org.agocontrol.model.Event> container;
     /** The grid. */
     private Grid grid;
 
@@ -74,8 +76,8 @@ public class EventPanel extends AbstractViewlet {
 
         final Site site = ((AgoControlSiteUI) UI.getCurrent()).getSite();
         final EntityManager entityManager = site.getSiteContext().getObject(EntityManager.class);
-        container = new EntityContainer<org.agocontrol.model.Event>(entityManager, true, true, false,
-                org.agocontrol.model.Event.class, 1000,
+        container = new LazyEntityContainer<org.agocontrol.model.Event>(entityManager, true, false, false,
+                org.agocontrol.model.Event.class, 50,
                 new String[] {"created"},
                 new boolean[] {false}, "eventId");
 

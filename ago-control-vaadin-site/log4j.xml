@@ -14,8 +14,14 @@
     <appender-ref ref="console" />
   </logger>
 
+    <logger name="org.vaadin.addons.sitekit" additivity="false">
+        <level value="debug"/>
+        <appender-ref ref="console" />
+    </logger>
+
+
     <root>
-        <priority value ="error" />
+        <priority value ="warn" />
         <appender-ref ref="console" />
     </root>
 
