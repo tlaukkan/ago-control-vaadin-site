@@ -17,27 +17,6 @@
  */
 package org.apache.qpid.client;
 
-import static org.apache.qpid.transport.Option.BATCH;
-import static org.apache.qpid.transport.Option.NONE;
-import static org.apache.qpid.transport.Option.SYNC;
-import static org.apache.qpid.transport.Option.UNRELIABLE;
-
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-import javax.jms.Destination;
-import javax.jms.JMSException;
-
 import org.apache.qpid.AMQException;
 import org.apache.qpid.client.AMQDestination.AddressOption;
 import org.apache.qpid.client.AMQDestination.Binding;
@@ -81,6 +60,25 @@ import org.apache.qpid.util.Serial;
 import org.apache.qpid.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import static org.apache.qpid.transport.Option.BATCH;
+import static org.apache.qpid.transport.Option.NONE;
+import static org.apache.qpid.transport.Option.SYNC;
+import static org.apache.qpid.transport.Option.UNRELIABLE;
 
 /**
  * This is a 0.10 Session
@@ -138,7 +136,7 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
     private AMQException _currentException;
 
     // a ref on the qpid connection
-    private org.apache.qpid.transport.Connection _qpidConnection;
+    private Connection _qpidConnection;
 
     private long maxAckDelay = Long.getLong("qpid.session.max_ack_delay", 1000);
     private TimerTask flushTask = null;
@@ -165,9 +163,9 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
      * @param defaultPrefetchLowMark  The number of prefetched messages at which to resume the session.
      * @param qpidConnection          The qpid connection
      */
-    AMQSession_0_10(org.apache.qpid.transport.Connection qpidConnection, AMQConnection con, int channelId,
+    AMQSession_0_10(Connection qpidConnection, AMQConnection con, int channelId,
                     boolean transacted, int acknowledgeMode, MessageFactoryRegistry messageFactoryRegistry,
-                    int defaultPrefetchHighMark, int defaultPrefetchLowMark,String name)
+                    int defaultPrefetchHighMark, int defaultPrefetchLowMark, String name)
     {
 
         super(con, channelId, transacted, acknowledgeMode, messageFactoryRegistry, defaultPrefetchHighMark,
@@ -206,7 +204,7 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
      * @param defaultPrefetchLow  The number of prefetched messages at which to resume the session.
      * @param qpidConnection      The connection
      */
-    AMQSession_0_10(org.apache.qpid.transport.Connection qpidConnection, AMQConnection con, int channelId,
+    AMQSession_0_10(Connection qpidConnection, AMQConnection con, int channelId,
                     boolean transacted, int acknowledgeMode, int defaultPrefetchHigh, int defaultPrefetchLow,
                     String name)
     {
@@ -414,8 +412,8 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
      * Close this session.
      *
      * @param timeout no used / 0_8 specific
-     * @throws AMQException
-     * @throws FailoverException
+     * @throws org.apache.qpid.AMQException
+     * @throws org.apache.qpid.client.failover.FailoverException
      */
     public void sendClose(long timeout) throws AMQException, FailoverException
     {
@@ -448,8 +446,8 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
      *                   the queue will be marked as durable.
      * @param exclusive  Exclusive queues can only be used from one connection at a time.
      * @param arguments  Exclusive queues can only be used from one connection at a time.
-     * @throws AMQException
-     * @throws FailoverException
+     * @throws org.apache.qpid.AMQException
+     * @throws org.apache.qpid.client.failover.FailoverException
      */
     public void sendCreateQueue(AMQShortString name, final boolean autoDelete, final boolean durable,
                                 final boolean exclusive, Map<String, Object> arguments) throws AMQException, FailoverException
@@ -464,8 +462,8 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
     /**
      * This method asks the broker to redeliver all unacknowledged messages
      *
-     * @throws AMQException
-     * @throws FailoverException
+     * @throws org.apache.qpid.AMQException
+     * @throws org.apache.qpid.client.failover.FailoverException
      */
     public void sendRecover() throws AMQException, FailoverException
     {
@@ -621,7 +619,7 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
                             boolean nowait, int tag)
             throws AMQException, FailoverException
     {
-        if (AMQDestination.DestSyntax.ADDR == consumer.getDestination().getDestSyntax())
+        if (DestSyntax.ADDR == consumer.getDestination().getDestSyntax())
         {
             if (AMQDestination.TOPIC_TYPE == consumer.getDestination().getAddressType())
             {
@@ -895,7 +893,7 @@ public class AMQSession_0_10 extends AMQSession<BasicMessageConsumer_0_10, Basic
     /**
      * Get the latest thrown exception.
      *
-     * @throws SessionException get the latest thrown error.
+     * @throws org.apache.qpid.transport.SessionException get the latest thrown error.
      */
     public AMQException getCurrentException()
     {

@@ -15,6 +15,7 @@
  */
 package org.agocontrol.agent;
 
+import org.agocontrol.client.CommandListener;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -69,8 +70,8 @@ public class ShellCommandListener implements CommandListener {
     /**
      * Sanitizes text to remove any characters which could be harmful when used as shell command parameters.
      *
-     * @param text the text to sanize
-     * @return
+     * @param text the text to sanitize
+     * @return sanitized text
      */
     private String sanitize(final String text) {
         if (text == null) {
@@ -101,13 +102,13 @@ public class ShellCommandListener implements CommandListener {
             String line;
 
             BufferedReader error = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            while ((line = error.readLine()) != null){
+            while ((line = error.readLine()) != null) {
                 LOGGER.error(line);
             }
             error.close();
 
             BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            while ((line = input.readLine()) != null){
+            while ((line = input.readLine()) != null) {
                 LOGGER.debug(line);
             }
 

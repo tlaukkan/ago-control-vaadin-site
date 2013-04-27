@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.agocontrol.agent;
+package org.agocontrol.client;
 
 import org.apache.log4j.Logger;
 import org.apache.qpid.client.AMQAnyDestination;
@@ -143,7 +143,7 @@ public class AgoClient {
         properties.put("java.naming.factory.initial",
                 "org.apache.qpid.jndi.PropertiesFileInitialContextFactory");
         properties.put("connectionfactory.qpidConnectionfactory",
-                "amqp://" + userName + ":" + password + "@agocontrolvaadinsite/client" +
+                "amqp://" + userName + ":" + password + "@agocontrol/javaclient" +
                         "?brokerlist='tcp://" + host + ":" + port + "'");
 
         context = new InitialContext(properties);

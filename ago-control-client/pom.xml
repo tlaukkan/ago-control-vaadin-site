@@ -3,10 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.agocontrol</groupId>
-    <artifactId>ago-control-common</artifactId>
+    <artifactId>ago-control-client</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0</version>
-    <name>ago-control-common</name>
+    <name>ago-control-client</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -14,14 +14,6 @@
     </properties>
 
     <repositories>
-        <repository>
-            <id>vaadin-snapshots</id>
-            <url>http://maven.vaadin.com/vaadin-addons</url>
-        </repository>
-        <repository>
-            <id>EclipseLink Repo</id>
-            <url>http://www.eclipse.org/downloads/download.php?r=1&amp;nf=1&amp;file=/rt/eclipselink/maven.repo</url>
-        </repository>
         <repository>
             <id>jsonrpc4j-webdav-maven-repo</id>
             <name>jsonrpc4j maven repository</name>
@@ -47,25 +39,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
@@ -75,6 +48,7 @@
                             <mainClass>org.agocontrol.site.AgoControlSiteUI</mainClass>
                         </manifest>
                     </archive>
+                    <finalName>ago-control-vaadin-site</finalName>
                 </configuration>
             </plugin>
 
@@ -82,11 +56,6 @@
     </build>
 
     <dependencies>
-        <dependency>
-            <groupId>org.agocontrol</groupId>
-            <artifactId>ago-control-client</artifactId>
-            <version>1.0.0</version>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -99,21 +68,6 @@
             <artifactId>hsqldb</artifactId>
             <version>1.8.0.10</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.vaadin.addons.sitekit</groupId>
-            <artifactId>vaadin-sitekit</artifactId>
-            <version>1.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>2.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.qpid</groupId>

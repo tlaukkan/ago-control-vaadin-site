@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.agocontrol.agent;
+package org.agocontrol.client;
 
 import java.util.Map;
 

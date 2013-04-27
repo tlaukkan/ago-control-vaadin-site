@@ -16,6 +16,8 @@
 package org.agocontrol.agent;
 
 import com.vaadin.annotations.Theme;
+import org.agocontrol.client.AgoClient;
+import org.agocontrol.client.CommandListener;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.vaadin.addons.sitekit.util.PropertiesUtil;
