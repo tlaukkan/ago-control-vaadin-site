@@ -192,6 +192,7 @@ public class AgoClient {
         });
         replyHandlerThread.start();
 
+        // Adds default command listener to respond to device discovery events.
         addCommandListener(null, new CommandListener() {
             @Override
             public Map<String, Object> commandReceived(final Map<String, Object> parameters) {
@@ -304,9 +305,12 @@ public class AgoClient {
 
             final MapMessage announceMessage = createMapMessage();
             announceMessage.setStringProperty("qpid.subject", "event.device.announce");
-            announceMessage.setString("uuid", deviceId);
-            announceMessage.setString("devicetype", deviceType);
-            sendEvent(announceMessage);
+
+            final Map<String, Object>  eventMap = new HashMap<String, Object>();
+            eventMap.put("event", "event.device.announce");
+            eventMap.put("uuid", deviceId);
+            eventMap.put("devicetype", deviceType);
+            sendEvent(eventMap);
 
             final Map<String, Object> commandMap = new HashMap<String, Object>();
             commandMap.put("command", "setdevicename");
@@ -330,10 +334,10 @@ public class AgoClient {
      */
     private boolean sendRemoveDevice(final String deviceId, final String deviceType) {
         try {
-            final MapMessage commandMessage = createMapMessage();
-            commandMessage.setStringProperty("qpid.subject", "event.device.remove");
-            commandMessage.setString("uuid", deviceId);
-            sendEvent(commandMessage);
+            final Map<String, Object>  eventMap = new HashMap<String, Object>();
+            eventMap.put("event", "event.device.remove");
+            eventMap.put("uuid", deviceId);
+            sendEvent(eventMap);
             return true;
         } catch (final Exception e) {
             LOGGER.error("Error removing device: " + deviceId + " (" + deviceType + ")", e);
@@ -344,11 +348,18 @@ public class AgoClient {
     /**
      * Sends event message.
      *
-     * @param eventMessage the eventMessage
+     * @param eventMap the parameters
      */
-    public final void sendEvent(final MapMessage eventMessage) {
+    public final void sendEvent(final Map<String, Object> eventMap) {
         synchronized (messageProducer) {
             try {
+                LOGGER.debug("Sending event: " + eventMap.toString());
+
+                final MapMessage eventMessage = createMapMessage();
+                eventMessage.setStringProperty("qpid.subject", (String) eventMap.remove("event"));
+                for (final String key : eventMap.keySet()) {
+                    eventMessage.setObject(key, eventMap.get(key));
+                }
                 messageProducer.send(eventMessage);
             } catch (Exception e) {
                 throw new RuntimeException("Error in event message sending.", e);
@@ -365,16 +376,15 @@ public class AgoClient {
     public final Message sendCommand(final Map<String, Object> commandMap) {
         synchronized (messageProducer) {
             try {
+                LOGGER.debug("Sending command: " + commandMap.toString());
+
                 replyMessageQueue.clear(); // clear reply queue to remove any unprocessed responses.
 
                 final MapMessage commandMessage = createMapMessage();
+                commandMessage.setJMSReplyTo(replyQueue);
                 for (final String key : commandMap.keySet()) {
                     commandMessage.setObject(key, commandMap.get(key));
                 }
-
-                commandMessage.setJMSReplyTo(replyQueue);
-
-                LOGGER.debug("Sending command: " + commandMap.toString());
 
                 messageProducer.send(commandMessage);
 
@@ -465,7 +475,7 @@ public class AgoClient {
                 LOGGER.debug("Observed command: " + map.toString());
 
                 if (!map.containsKey("uuid")
-                        || (map.containsKey("uuid") && commandListeners.containsKey(map.containsKey("uuid")))) {
+                        || (map.containsKey("uuid") && commandListeners.containsKey(map.get("uuid")))) {
                     final MessageProducer replyProducer;
                     if (mapMessage.getJMSReplyTo() != null) {
                         if (mapMessage.getJMSReplyTo() instanceof AMQAnyDestination) {
