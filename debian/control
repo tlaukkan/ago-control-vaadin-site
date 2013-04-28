@@ -12,3 +12,10 @@ Depends: ${java:Depends}, ${misc:Depends}, postgresql, agocontrol
 Recommends: ${java:Recommends}
 Description: Ago control Vaadin site.
  Ago control Vaadin site can be used to manage multiple ago control systems.
+
+Package: ago-control-server-agent
+Architecture: all
+Depends: ${java:Depends}, ${misc:Depends}, postgresql, agocontrol
+Recommends: ${java:Recommends}
+Description: Ago control Linux server agent.
+ Ago control Linux server agent can be used to expose linux machines as ago control devices.

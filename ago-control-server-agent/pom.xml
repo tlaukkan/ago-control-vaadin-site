@@ -72,33 +72,12 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>org.agocontrol.site.AgoControlSiteUI</mainClass>
+                            <mainClass>org.agocontrol.agent.AgoControlAgent</mainClass>
                         </manifest>
                     </archive>
-                    <finalName>ago-control-vaadin-site</finalName>
+                    <finalName>ago-control-server-agent</finalName>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>com.vaadin</groupId>
-                <artifactId>vaadin-maven-plugin</artifactId>
-                <version>${vaadin.version}</version>
-                <configuration>
-                    <strict>true</strict>
-                    <force>true</force>
-                    <!-- Enable during development to speed compiling. -->
-                    <!-- <draftCompile>true</draftCompile>
-                    <style>DETAILED</style> -->
-                    <!--<userAgents>ie8</userAgents>-->
-                    <!-- <userAgents>gecko1_8</userAgents> -->
-                    <!-- End development options -->
-                    <webappDirectory>src/main/resources/VAADIN/widgetsets</webappDirectory>
-                    <modules>
-                        <module>org.agocontrol.site.AgoControlSiteWidgetset</module>
-                    </modules>
-                </configuration>
-            </plugin>
-
 
         </plugins>
     </build>

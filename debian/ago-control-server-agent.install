@@ -1,0 +1,6 @@
+ago-control-server-agent/target/ago-control-server-agent.jar opt/agocontrol/agent
+ago-control-server-agent/target/lib/*.jar opt/agocontrol/agent/lib
+ago-control-server-agent/conf/log4j.xml opt/agocontrol/agent
+ago-control-server-agent/conf/ago-control-server-agent-ext.properties opt/agocontrol/agent
+ago-control-server-agent/bin/agoagent.service lib/systemd/system
+

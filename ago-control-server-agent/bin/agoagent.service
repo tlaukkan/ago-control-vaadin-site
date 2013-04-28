@@ -1,0 +1,14 @@
+[Unit]
+Description=ago control server agent
+
+[Service]
+ExecStart=/usr/bin/java -jar /opt/agocontrol/agent/ago-control-server-agent.jar
+WorkingDirectory=/opt/agocontrol/agent
+StandardOutput=syslog
+StandardError=syslog
+Restart=always
+RestartSec=2
+User=agocontrol
+
+[Install]
+WantedBy=multi-user.target

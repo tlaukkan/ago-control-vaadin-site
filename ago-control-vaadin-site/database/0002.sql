@@ -1,3 +1,5 @@
+\connect agosite
+
 ALTER TABLE element ADD COLUMN bus_busid character varying(255);
 
 ALTER TABLE element RENAME parentid  TO parent_elementid;
