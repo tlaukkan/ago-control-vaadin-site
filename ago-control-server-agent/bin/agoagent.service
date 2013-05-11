@@ -8,7 +8,7 @@ StandardOutput=syslog
 StandardError=syslog
 Restart=always
 RestartSec=2
-User=agocontrol
+User=root
 
 [Install]
 WantedBy=multi-user.target

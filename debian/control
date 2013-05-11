@@ -15,7 +15,7 @@ Description: Ago control Vaadin site.
 
 Package: ago-control-server-agent
 Architecture: all
-Depends: ${java:Depends}, ${misc:Depends}, postgresql, agocontrol
+Depends: ${java:Depends}, ${misc:Depends}, postgresql, agocontrol, alsa-oss, flint, x11-xserver-utils
 Recommends: ${java:Recommends}
 Description: Ago control Linux server agent.
  Ago control Linux server agent can be used to expose linux machines as ago control devices.

@@ -50,17 +50,17 @@ public class ShellCommandListener implements CommandListener {
         final String command = (String) parameters.get("command");
 
         if ("screenon".equals(command)) {
-            executeShellCommand("/usr/bin/xset dpms force on");
+            executeShellCommand("xset -display :0 dpms force on");
         }
 
         if ("screenoff".equals(command)) {
-            executeShellCommand("/usr/bin/xset dpms force off");
+            executeShellCommand("xset -display :0 dpms force off");
         }
 
         if ("say".equals(command)) {
             final String message = sanitize((String) parameters.get("message"));
             if (message.length() > 0) {
-                executeShellCommand("flite -t '" + message + "' -voice slt");
+                executeShellCommand("aoss flite -t '" + message + "' -voice slt");
             }
         }
 
